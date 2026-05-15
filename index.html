@@ -3,262 +3,218 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Andar Bahar Pro - Firebase Edition</title>
-    <script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-database-compat.js"></script>
-
+    <title>Andar Bahar Pro - Master Control</title>
+    <!-- Firebase Realtime Core Database SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
-        body { background: #0f172a; color: #fff; font-family: sans-serif; text-align: center; margin: 0; padding: 10px; }
-        .container { max-width: 500px; margin: auto; }
-        .status-bar { display: flex; justify-content: space-around; background: #1e293b; padding: 10px; border-radius: 8px; margin-bottom: 10px; font-size: 14px; }
-        .box { background: #1e293b; padding: 15px; border-radius: 12px; min-height: 120px; flex: 1; border: 2px solid transparent; }
-        .row { display: flex; gap: 10px; margin: 10px 0; }
-        .bigCard { width: 80px; height: 110px; background: #fff; border-radius: 10px; margin: 10px auto; color: #000; font-size: 20px; font-weight: bold; display: flex; flex-direction: column; justify-content: space-around; border: 3px solid #3b82f6; }
-        .card { width: 40px; height: 55px; background: #fff; border-radius: 5px; color: #000; display: inline-block; margin: 2px; font-size: 12px; font-weight: bold; padding: 2px; box-shadow: 0 2px 4px rgba(0,0,0,0.5); }
-        .red { color: #ef4444; } .black { color: #1e293b; }
-        button { padding: 10px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; }
-        .btn-bet { background: #3b82f6; color: #fff; width: 48%; }
-        .btn-place { background: #22c55e; color: #fff; width: 100%; font-size: 18px; margin-top: 10px; }
-        .active { border: 2px solid #fff; transform: scale(1.05); }
-        .win { border-color: #22c55e !important; background: #064e3b !important; }
-        #adminOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #020617; z-index: 100; overflow-y: auto; padding: 20px; box-sizing: border-box; }
-        .req-card { background: #1e293b; padding: 10px; border-left: 4px solid #fbbf24; margin: 10px 0; text-align: left; font-size: 12px; }
+        body { background: #0f172a; color: #fff; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; margin: 0; padding: 10px; overflow-x: hidden; }
+        .container { max-width: 600px; margin: auto; }
+        
+        /* Card Styling */
+        .card {
+            width: 50px; height: 75px; background: #fff; border-radius: 6px;
+            margin: 4px; display: inline-flex; flex-direction: column;
+            justify-content: space-between; padding: 5px; font-weight: bold;
+            animation: pop 0.3s ease; box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            color: #000; font-size: 14px;
+        }
+        @keyframes pop { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+        .bigCard {
+            width: 100px; height: 140px; background: #fff; border-radius: 12px;
+            margin: 15px auto; display: flex; flex-direction: column;
+            justify-content: space-between; padding: 10px; font-weight: bold;
+            font-size: 24px; color: #000; border: 4px solid #3b82f6;
+            animation: pop 0.5s ease;
+        }
+
+        .red { color: #ef4444; }
+        .black { color: #1e293b; }
+
+        .row { display: flex; gap: 10px; justify-content: center; margin: 15px 0; }
+        .box { flex: 1; background: #1e293b; padding: 15px; border-radius: 12px; min-height: 180px; border: 2px solid transparent; transition: 0.3s; }
+        .win { border: 3px solid #22c55e !important; background: #064e3b !important; transform: scale(1.02); }
+
+        button { padding: 10px 15px; margin: 5px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        .btn-bet { background: #3b82f6; color: white; width: 45%; border: 2px solid transparent; }
+        .activeBtn { border-color: #fff; background: #22c55e !important; transform: scale(1.05); box-shadow: 0 0 10px #22c55e; }
+        .btn-place { background: #22c55e; color: white; width: 90%; font-size: 18px; margin-top: 10px; }
+        .btn-place:disabled { background: #475569; cursor: not-allowed; opacity: 0.5; }
+        input { padding: 10px; border-radius: 8px; border: none; text-align: center; font-size: 16px; background: #f1f5f9; color: #000; }
+
+        .panel { background: #1e293b; padding: 15px; border-radius: 12px; margin-top: 15px; border: 1px solid #334155; }
+        .status-bar { background: #1e293b; padding: 10px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-around; align-items: center; }
+        
+        #history span { display: inline-block; width: 25px; height: 25px; line-height: 25px; margin: 3px; border-radius: 50%; font-weight: bold; font-size: 12px; }
+        .a-hist { background: #22c55e; color: #000; }
+        .b-hist { background: #3b82f6; color: #fff; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div style="display:flex; justify-content:space-between; font-size:12px; color:#94a3b8;">
-        <span>Andar Bahar Master</span>
-        <span id="pID">ID: Loading...</span>
-    </div>
+    <h2>🃏 Andar Bahar Pro</h2>
+    <div style="font-size: 12px; color: #94a3b8; margin-bottom: 5px;">My Account ID: <span id="myIdDisplay" style="color:#fbbf24; font-weight:bold;">Loading ID...</span></div>
 
     <div class="status-bar">
-        <span>Coins: <b id="coins" style="color:#22c55e">--</b></span>
-        <span>Time: <b id="timer" style="color:#ef4444">10s</b></span>
+        <span>Coins: <b id="coins" style="color:#22c55e">0</b></span>
+        <span>Total Bet: <b id="totalBetDisplay" style="color:#fbbf24">0</b></span>
+        <span>Time: <b id="time" style="color:#ef4444">10</b>s</span>
     </div>
 
-    <div id="jokerArea"></div>
-    <h3 id="result">Waiting for Game...</h3>
+    <div id="joker"></div>
+    <div id="result" style="font-size:22px; font-weight:bold; height:30px; margin:10px; color:#fbbf24;">Waiting...</div>
 
     <div class="row">
-        <div class="box" id="andarBox">ANDAR<div id="andarCards"></div></div>
-        <div class="box" id="baharBox">BAHAR<div id="baharCards"></div></div>
-    </div>
-
-    <div class="row">
-        <button id="btnA" class="btn-bet active" onclick="setSide('andar')">ANDAR</button>
-        <button id="btnB" class="btn-bet" onclick="setSide('bahar')">BAHAR</button>
-    </div>
-    <input type="number" id="betAmt" value="100" style="padding:10px; width:80%; border-radius:8px;">
-    <button class="btn-place" id="placeBtn" onclick="placeBet()">PLACE BET</button>
-
-    <div class="row" style="font-size:11px;">
-        <div class="box" style="border:1px dashed #22c55e;">
-            Deposit<br>
-            <input id="depAmt" placeholder="Amt" style="width:80%; margin:5px 0;"><br>
-            <button onclick="sendReq('Deposit')" style="background:#22c55e; color:#fff; padding:5px;">Submit</button>
+        <div class="box" id="andarBox">
+            <h3>ANDAR</h3>
+            <div id="andar"></div>
         </div>
-        <div class="box" style="border:1px dashed #ef4444;">
-            Withdraw<br>
-            <input id="witAmt" placeholder="Amt" style="width:80%; margin:5px 0;"><br>
-            <button onclick="sendReq('Withdraw')" style="background:#ef4444; color:#fff; padding:5px;">Submit</button>
+        <div class="box" id="baharBox">
+            <h3>BAHAR</h3>
+            <div id="bahar"></div>
         </div>
     </div>
 
-    <button onclick="openAdmin()" style="margin-top:20px; opacity:0.3; background:none; color:#fff;">Admin Login</button>
-</div>
+    <!-- Bet UI Panel -->
+    <div class="panel">
+        <div class="row" style="margin:0 0 10px 0;">
+            <button id="andarBtn" class="btn-bet" onclick="selectSide('andar')">ANDAR</button>
+            <button id="baharBtn" class="btn-bet" onclick="selectSide('bahar')">BAHAR</button>
+        </div>
+        <input id="amount" type="number" value="100" style="width:80px;">
+        <button onclick="quick(100)">+100</button>
+        <button onclick="doubleBet()">2x</button>
+        <button class="btn-place" id="placeBtn" onclick="placeBet()">PLACE BET</button>
+        <div id="betMsg" style="margin-top:10px; font-size:14px; min-height:20px; font-weight:bold; color:#94a3b8"></div>
+    </div>
 
-<div id="adminOverlay">
-    <button onclick="closeAdmin()" style="float:right; background:red; color:#fff;">X</button>
-    <h2>Admin Control</h2>
-    <div id="adminStats" style="background:#111827; padding:15px; border-radius:10px; margin-bottom:20px;"></div>
-    
-    <h3>Winner Control</h3>
-    <button onclick="forceWin('andar')" style="background:#22c55e;">Next Andar Win</button>
-    <button onclick="forceWin('bahar')" style="background:#3b82f6; color:#fff;">Next Bahar Win</button>
-    <button onclick="forceWin('auto')" style="background:#64748b; color:#fff;">Auto Mode</button>
-    
-    <h3>User Requests</h3>
-    <div id="adminReqs"></div>
+    <!-- Wallet Section -->
+    <div class="row">
+        <div class="panel" style="flex:1; border-color: #22c55e; border-style: dashed;">
+            <h4 style="margin:0 0 5px 0;">💰 Deposit</h4>
+            <div id="displayUPI" style="font-size:10px; color:#fbbf24; margin-bottom:5px;">UPI: loading...</div>
+            <input type="number" id="userDepAmt" placeholder="Amt" style="width:90%; margin-bottom:5px; font-size:11px;">
+            <input type="text" id="userUTR" placeholder="UTR Num" style="width:90%; margin-bottom:5px; font-size:11px;">
+            <button onclick="requestDeposit()" style="background:#22c55e; color:white; width:95%; padding: 5px; font-size:11px;">Submit</button>
+        </div>
+        <div class="panel" style="flex:1; border-color: #ef4444; border-style: dashed;">
+            <h4 style="margin:0 0 5px 0;">🏦 Withdraw</h4>
+            <input type="number" id="userWithAmt" placeholder="Amt" style="width:90%; margin-bottom:5px; font-size:11px;">
+            <input type="text" id="userUPI" placeholder="UPI ID" style="width:90%; margin-bottom:5px; font-size:11px;">
+            <button onclick="requestWithdrawal()" style="background:#ef4444; color:white; width:95%; padding: 5px; font-size:11px;">Withdraw</button>
+        </div>
+    </div>
+
+    <div id="history" style="margin-top:20px; min-height: 35px;"></div>
 </div>
 
 <script>
-    // --- FIREBASE CONFIG ---
+    // === APNE FIREBASE CREDENTIALS YAHAN PASTE KAREIN ===
     const firebaseConfig = {
-        // APNI DETAILS YAHA PASTE KAREIN
         apiKey: "YOUR_API_KEY",
-        authDomain: "YOUR_PROJECT.firebaseapp.com",
-        databaseURL: "https://YOUR_PROJECT.firebaseio.com",
-        projectId: "YOUR_PROJECT",
-        storageBucket: "YOUR_PROJECT.appspot.com",
-        messagingSenderId: "YOUR_ID",
+        authDomain: "YOUR_AUTH_DOMAIN",
+        databaseURL: "YOUR_DATABASE_URL",
+        projectId: "YOUR_PROJECT_ID",
+        storageBucket: "YOUR_STORAGE_BUCKET",
+        messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
         appId: "YOUR_APP_ID"
     };
     firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
+    const database = firebase.database();
 
-    // --- State ---
-    let myID = localStorage.getItem('ab_id') || 'P-' + Math.floor(Math.random()*9000);
-    localStorage.setItem('ab_id', myID);
-    document.getElementById('pID').innerText = "ID: " + myID;
-
-    let balance = 0;
+    let myId = localStorage.getItem('ab_live_user_id');
+    let myCoins = 0;
     let selectedSide = 'andar';
-    let betPlaced = false;
-    let winnerControl = 'auto';
+    let betPlacedThisRound = false;
 
-    // Sync Balance & Requests
-    db.ref('users/' + myID).on('value', snap => {
-        let data = snap.val();
-        if(!data) { db.ref('users/' + myID).set({balance: 500}); }
-        else { balance = data.balance; document.getElementById('coins').innerText = balance; }
-    });
-
-    function setSide(s) {
-        selectedSide = s;
-        document.getElementById('btnA').classList.toggle('active', s === 'andar');
-        document.getElementById('btnB').classList.toggle('active', s === 'bahar');
+    // Naye user ke aate hi unique database registration logic
+    if (!myId) {
+        myId = 'User_' + Math.floor(10000 + Math.random() * 90000);
+        localStorage.setItem('ab_live_user_id', myId);
+        database.ref('players/' + myId).set({ id: myId, coins: 500, currentBet: { side: 'none', amount: 0 } });
     }
+    document.getElementById('myIdDisplay').innerText = myId;
 
-    function placeBet() {
-        let amt = parseInt(document.getElementById('betAmt').value);
-        if(amt > balance || betPlaced) return alert("Check balance or wait!");
-        db.ref('users/' + myID).update({ balance: balance - amt });
-        db.ref('liveBets/' + myID).set({ side: selectedSide, amount: amt });
-        betPlaced = true;
-        document.getElementById('placeBtn').innerText = "BET PLACED";
-        document.getElementById('placeBtn').disabled = true;
-    }
-
-    function sendReq(type) {
-        let amt = document.getElementById(type === 'Deposit' ? 'depAmt' : 'witAmt').value;
-        if(!amt) return;
-        db.ref('requests').push({ pID: myID, type: type, amount: amt, status: 'pending' });
-        alert(type + " request sent!");
-    }
-
-    // --- Game Logic ---
-    const ranks = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
-    const suits = ['♥','♦','♣','♠'];
-
-    function startNewRound() {
-        document.getElementById('andarCards').innerHTML = '';
-        document.getElementById('baharCards').innerHTML = '';
-        document.getElementById('andarBox').classList.remove('win');
-        document.getElementById('baharBox').classList.remove('win');
-        betPlaced = false;
-        document.getElementById('placeBtn').disabled = false;
-        document.getElementById('placeBtn').innerText = "PLACE BET";
-
-        let joker = { rank: ranks[Math.floor(Math.random()*13)], suit: suits[Math.floor(Math.random()*4)] };
-        let color = (joker.suit === '♥' || joker.suit === '♦') ? 'red' : 'black';
-        document.getElementById('jokerArea').innerHTML = `<div class="bigCard"><div class="${color}">${joker.rank}</div><div class="${color}" style="font-size:40px">${joker.suit}</div></div>`;
-
-        let timeLeft = 10;
-        let timer = setInterval(() => {
-            document.getElementById('timer').innerText = timeLeft + "s";
-            timeLeft--;
-            if(timeLeft < 0) {
-                clearInterval(timer);
-                deal(joker);
-            }
-        }, 1000);
-    }
-
-    function deal(joker) {
-        let turn = 0;
-        let game = setInterval(() => {
-            let card = { rank: ranks[Math.floor(Math.random()*13)], suit: suits[Math.floor(Math.random()*4)] };
-            
-            // Admin Control
-            db.ref('gameControl/winner').once('value', s => { winnerControl = s.val() || 'auto'; });
-            if(winnerControl === 'andar' && turn > 4) card.rank = joker.rank;
-            if(winnerControl === 'bahar' && turn > 5) card.rank = joker.rank;
-
-            let cDiv = `<div class="card ${(card.suit === '♥' || card.suit === '♦') ? 'red' : 'black'}">${card.rank}<br>${card.suit}</div>`;
-            if(turn % 2 === 0) document.getElementById('andarCards').innerHTML += cDiv;
-            else document.getElementById('baharCards').innerHTML += cDiv;
-
-            if(card.rank === joker.rank) {
-                clearInterval(game);
-                let winSide = (turn % 2 === 0) ? 'andar' : 'bahar';
-                endRound(winSide);
-            }
-            turn++;
-        }, 800);
-    }
-
-    function endRound(winSide) {
-        document.getElementById(winSide + 'Box').classList.add('win');
-        document.getElementById('result').innerText = winSide.toUpperCase() + " WINS!";
-        
-        db.ref('liveBets/' + myID).once('value', s => {
-            let bet = s.val();
-            if(bet && bet.side === winSide) {
-                db.ref('users/' + myID).update({ balance: balance + (bet.amount * 2) });
-            }
-        });
-        db.ref('liveBets/' + myID).remove();
-        db.ref('gameControl').update({ winner: 'auto' });
-        setTimeout(startNewRound, 4000);
-    }
-
-    // --- Admin Logic ---
-    function openAdmin() { if(prompt("Pass:") === "admin123") document.getElementById('adminOverlay').style.display = 'block'; }
-    function closeAdmin() { document.getElementById('adminOverlay').style.display = 'none'; }
-    function forceWin(side) { db.ref('gameControl').update({ winner: side }); alert("Target set to: " + side); }
-
-    // Admin Requests View
-    db.ref('requests').on('value', snap => {
-        let reqs = snap.val();
-        let html = '';
-        for(let id in reqs) {
-            if(reqs[id].status === 'pending') {
-                html += `<div class="req-card">
-                    ID: ${reqs[id].pID} | ${reqs[id].type}: ₹${reqs[id].amount}
-                    <button onclick="approve('${id}', '${reqs[id].pID}', ${reqs[id].amount}, '${reqs[id].type}')">Approve</button>
-                </div>`;
+    // Listen Realtime Player Status (Coins and current bets)
+    database.ref('players/' + myId).on('value', snapshot => {
+        let val = snapshot.val();
+        if(val) {
+            myCoins = val.coins;
+            document.getElementById('coins').innerText = myCoins;
+            if(val.currentBet && val.currentBet.amount > 0) {
+                document.getElementById('totalBetDisplay').innerText = val.currentBet.amount;
+                document.getElementById('betMsg').innerText = `Bet: ${val.currentBet.amount} on ${val.currentBet.side.toUpperCase()}`;
+            } else {
+                document.getElementById('totalBetDisplay').innerText = "0";
             }
         }
-        document.getElementById('adminReqs').innerHTML = html;
     });
 
-    function approve(id, pID, amt, type) {
-        db.ref('users/' + pID).once('value', s => {
-            let curBal = s.val().balance;
-            let newBal = (type === 'Deposit') ? curBal + parseInt(amt) : curBal - parseInt(amt);
-            db.ref('users/' + pID).update({ balance: newBal });
-            db.ref('requests/' + id).update({ status: 'done' });
-        });
+    // Global App Configuration (UPI and History) Sync
+    database.ref('system').on('value', snapshot => {
+        let sys = snapshot.val();
+        if(sys) {
+            document.getElementById('displayUPI').innerText = "UPI: " + (sys.adminUPI || "loading...");
+            if(sys.history) {
+                let histArr = Object.values(sys.history);
+                if (histArr.length > 15) histArr = histArr.slice(-15);
+                document.getElementById('history').innerHTML = histArr.map(h => `<span class="${h === 'A' ? 'a-hist' : 'b-hist'}">${h}</span>`).join('');
+            }
+        }
+    });
+
+    // Core Game State Listener (No state is calculated on client to avoid refresh resets)
+    database.ref('gameState').on('value', snapshot => {
+        let game = snapshot.val();
+        if(!game) return;
+
+        document.getElementById('time').innerText = game.timeLeft;
+
+        if (game.status === 'betting') {
+            betPlacedThisRound = false;
+            document.getElementById('placeBtn').disabled = false;
+            document.getElementById('result').innerText = 'Wait...';
+            document.getElementById('joker').innerHTML = '';
+            document.getElementById('andar').innerHTML = '';
+            document.getElementById('bahar').innerHTML = '';
+            document.getElementById('andarBox').classList.remove('win');
+            document.getElementById('baharBox').classList.remove('win');
+            if(!betPlacedThisRound) document.getElementById('betMsg').innerText = '';
+        } 
+        else if (game.status === 'dealing') {
+            document.getElementById('placeBtn').disabled = true;
+            document.getElementById('result').innerText = 'Dealing Cards...';
+            if(game.joker) buildJokerCard(game.joker);
+            renderCurrentCards(game.andarCards, game.baharCards);
+        } 
+        else if (game.status === 'finished') {
+            document.getElementById('placeBtn').disabled = true;
+            document.getElementById('result').innerText = `${game.winner.toUpperCase()} WINS!`;
+            document.getElementById('andarBox').classList.toggle('win', game.winner === 'andar');
+            document.getElementById('baharBox').classList.toggle('win', game.winner === 'bahar');
+        }
+    });
+
+    function buildJokerCard(joker) {
+        let color = (joker.suit === '♥' || joker.suit === '♦') ? 'red' : 'black';
+        document.getElementById('joker').innerHTML = `<div class="bigCard"><div class="${color}">${joker.rank}${joker.suit}</div><div style="font-size:40px; align-self:center; color:${color}">${joker.suit}</div><div class="${color}" style="text-align:right">${joker.rank}${joker.suit}</div></div>`;
     }
 
-    startNewRound();
-</script>
-</body>
-</html>ayer_id', playerID);
-    
-    let coins = parseInt(localStorage.getItem('ab_coins')) || 500;
-    let adminUPI = localStorage.getItem('ab_admin_upi') || "paytmqr123@paytm";
-    
-    let currentBets = [];
-    let deck = [], joker = null;
-    let timerInt, gameInt;
-    let bettingOpen = false;
-    let selectedSide = 'andar';
-    let historyData = JSON.parse(localStorage.getItem('ab_history')) || [];
-    let forcedWinner = 'auto';
-
-    // Simulated "Server" Data
-    let liveAndarTotal = 0;
-    let liveBaharTotal = 0;
-
-    // --- Core Game Functions ---
-    function updateUI() {
-        document.getElementById('coins').innerText = coins;
-        document.getElementById('playerIDDisplay').innerText = "ID: " + playerID;
-        document.getElementById('totalBetDisplay').innerText = liveAndarTotal + liveBaharTotal;
-        localStorage.setItem('ab_coins', coins);
+    function renderCurrentCards(andar, bahar) {
+        if(andar) {
+            document.getElementById('andar').innerHTML = Object.values(andar).map(c => {
+                let color = (c.suit === '♥' || c.suit === '♦') ? 'red' : 'black';
+                return `<div class="card"><span class="${color}">${c.rank}${c.suit}</span><span class="${color}" style="font-size:18px; text-align:center">${c.suit}</span></div>`;
+            }).join('');
+        }
+        if(bahar) {
+            document.getElementById('bahar').innerHTML = Object.values(bahar).map(c => {
+                let color = (c.suit === '♥' || c.suit === '♦') ? 'red' : 'black';
+                return `<div class="card"><span class="${color}">${c.rank}${c.suit}</span><span class="${color}" style="font-size:18px; text-align:center">${c.suit}</span></div>`;
+            }).join('');
+        }
     }
 
     function selectSide(side) {
@@ -268,200 +224,40 @@
     }
 
     function placeBet() {
-        if (!bettingOpen) return alert("Wait for next round!");
+        if(betPlacedThisRound) return alert("Is round me bet lag chuki hai!");
         let amt = parseInt(document.getElementById('amount').value);
-        if (amt <= 0 || isNaN(amt) || amt > coins) return alert("Check your balance!");
-        
-        coins -= amt;
-        currentBets.push({ side: selectedSide, amount: amt });
-        if(selectedSide === 'andar') liveAndarTotal += amt; else liveBaharTotal += amt;
-        
-        updateUI();
-        refreshAdminStats();
-        document.getElementById('betMsg').innerText = `Placed: ${amt} on ${selectedSide.toUpperCase()}`;
+        if (amt <= 0 || isNaN(amt) || amt > myCoins) return alert("Invalid amount or balance!");
+
+        betPlacedThisRound = true;
+        database.ref('players/' + myId).update({
+            coins: myCoins - amt,
+            currentBet: { side: selectedSide, amount: amt }
+        });
     }
 
-    function startRound() {
-        liveAndarTotal = 0; liveBaharTotal = 0;
-        currentBets = []; 
-        updateUI(); 
-        refreshAdminStats();
-
-        document.getElementById('andar').innerHTML = '';
-        document.getElementById('bahar').innerHTML = '';
-        document.getElementById('andarBox').classList.remove('win');
-        document.getElementById('baharBox').classList.remove('win');
-        document.getElementById('betMsg').innerText = ''; 
-        document.getElementById('result').innerText = 'Shuffling...';
-        
-        deck = [];
-        for (let s of suits) for (let r of ranks) deck.push({ rank: r, suit: s });
-        deck = deck.sort(() => Math.random() - 0.5);
-        
-        joker = deck.shift();
-        let color = (joker.suit === '♥' || joker.suit === '♦') ? 'red' : 'black';
-        document.getElementById('joker').innerHTML = `<div class="bigCard"><div class="${color}">${joker.rank}${joker.suit}</div><div style="font-size:35px; align-self:center; color:${color}">${joker.suit}</div><div class="${color}" style="text-align:right">${joker.rank}${joker.suit}</div></div>`;
-
-        bettingOpen = true;
-        let timeLeft = 10;
-        document.getElementById('placeBtn').disabled = false;
-
-        timerInt = setInterval(() => {
-            timeLeft--;
-            document.getElementById('time').innerText = timeLeft;
-            if (timeLeft <= 0) {
-                clearInterval(timerInt);
-                bettingOpen = false;
-                document.getElementById('placeBtn').disabled = true;
-                dealCards();
-            }
-        }, 1000);
-    }
-
-    function dealCards() {
-        let turn = 0;
-        gameInt = setInterval(() => {
-            let card;
-            // Admin logic
-            if (forcedWinner === 'andar' && turn >= 4) card = { rank: joker.rank, suit: suits[0] };
-            else if (forcedWinner === 'bahar' && turn >= 5) card = { rank: joker.rank, suit: suits[0] };
-            else {
-                card = deck.shift();
-                if(forcedWinner !== 'auto' && card.rank === joker.rank) { deck.push(card); card = deck.shift(); }
-            }
-
-            let cardDiv = document.createElement('div');
-            let color = (card.suit === '♥' || card.suit === '♦') ? 'red' : 'black';
-            cardDiv.className = 'card';
-            cardDiv.innerHTML = `<span class="${color}">${card.rank}${card.suit}</span><span class="${color}" style="font-size:16px; text-align:center">${card.suit}</span>`;
-            
-            if (turn % 2 === 0) {
-                document.getElementById('andar').appendChild(cardDiv);
-                if (card.rank === joker.rank) finish('andar');
-            } else {
-                document.getElementById('bahar').appendChild(cardDiv);
-                if (card.rank === joker.rank) finish('bahar');
-            }
-            turn++;
-        }, 800);
-    }
-
-    function finish(winner) {
-        clearInterval(gameInt);
-        document.getElementById('result').innerText = `${winner.toUpperCase()} WINS!`;
-        document.getElementById(winner + 'Box').classList.add('win');
-        
-        let winAmt = 0;
-        currentBets.forEach(b => { if (b.side === winner) winAmt += b.amount * 2; });
-        if (winAmt > 0) {
-            coins += winAmt;
-            document.getElementById('betMsg').innerHTML = `<span style="color:#22c55e">You Won ₹${winAmt}!</span>`;
-        } else if (currentBets.length > 0) {
-            document.getElementById('betMsg').innerHTML = `<span style="color:#ef4444">Loss! Try Again.</span>`;
-        }
-        
-        updateUI();
-        forcedWinner = 'auto'; // Reset admin control after win
-        
-        historyData.push(winner === 'andar' ? 'A' : 'B');
-        if (historyData.length > 12) historyData.shift();
-        localStorage.setItem('ab_history', JSON.stringify(historyData));
-        renderHistory();
-        
-        setTimeout(startRound, 4000);
-    }
-
-    function renderHistory() {
-        document.getElementById('history').innerHTML = historyData.map(h => `<span class="${h === 'A' ? 'a-hist' : 'b-hist'}">${h}</span>`).join('');
-    }
-
-    // --- Admin & Master Logic ---
-    function checkAdmin() {
-        let pass = prompt("Enter Master Password:");
-        if (pass === "admin123") {
-            document.getElementById('adminOverlay').style.display = 'block';
-            renderAdminRequests(); 
-            renderPlayerList();
-            refreshAdminStats();
-        }
-    }
-    
-    function closeAdmin() { document.getElementById('adminOverlay').style.display = 'none'; }
-
-    function setNextWinner(side) {
-        forcedWinner = side;
-        document.getElementById('ctrlAndar').classList.toggle('ctrl-active', side === 'andar');
-        document.getElementById('ctrlBahar').classList.toggle('ctrl-active', side === 'bahar');
-        document.getElementById('ctrlAuto').classList.toggle('ctrl-active', side === 'auto');
-    }
-
-    function refreshAdminStats() {
-        document.getElementById('admAndarBet').innerText = liveAndarTotal;
-        document.getElementById('admBaharBet').innerText = liveBaharTotal;
-        document.getElementById('admStatus').innerText = bettingOpen ? "Taking Bets" : "Dealing Cards";
-    }
-
-    // --- Wallet & Request System ---
     function requestDeposit() {
         let amt = document.getElementById('userDepAmt').value;
         let utr = document.getElementById('userUTR').value;
-        if(!amt || utr.length < 4) return alert("Fill Amount and UTR properly!");
-        
-        let reqs = JSON.parse(localStorage.getItem('ab_requests') || "[]");
-        reqs.push({id: Date.now(), pID: playerID, type: 'Deposit', amount: amt, info: utr, status: 'pending'});
-        localStorage.setItem('ab_requests', JSON.stringify(reqs));
-        alert("Deposit Request Sent to Admin!");
+        if(!amt || utr.length < 5) return alert("Details bhariye!");
+        database.ref('requests').push({ id: Date.now(), userId: myId, type: 'Deposit', amount: amt, info: utr, status: 'pending' });
+        alert("Request sent!");
+        document.getElementById('userDepAmt').value = ''; document.getElementById('userUTR').value = '';
     }
 
     function requestWithdrawal() {
         let amt = parseInt(document.getElementById('userWithAmt').value);
         let upi = document.getElementById('userUPI').value;
-        if(!amt || upi.length < 5) return alert("Invalid details!");
-        if(amt > coins) return alert("Insufficient Balance!");
-
-        coins -= amt; updateUI();
-        let reqs = JSON.parse(localStorage.getItem('ab_requests') || "[]");
-        reqs.push({id: Date.now(), pID: playerID, type: 'Withdrawal', amount: amt, info: upi, status: 'pending'});
-        localStorage.setItem('ab_requests', JSON.stringify(reqs));
-        alert("Withdrawal Request Sent!");
+        if(!amt || upi.length < 5 || amt > myCoins) return alert("Low balance!");
+        
+        database.ref('players/' + myId).update({ coins: myCoins - amt });
+        database.ref('requests').push({ id: Date.now(), userId: myId, type: 'Withdrawal', amount: amt, info: upi, status: 'pending' });
+        alert("Withdrawal sent!");
+        document.getElementById('userWithAmt').value = ''; document.getElementById('userUPI').value = '';
     }
 
-    function renderAdminRequests() {
-        let reqs = JSON.parse(localStorage.getItem('ab_requests') || "[]");
-        let html = reqs.filter(r => r.status === 'pending').map(r => `
-            <div class="req-card">
-                <b>${r.type}</b> | User: ${r.pID} | ₹${r.amount} <br>
-                <small>Info: ${r.info}</small> <br>
-                <button onclick="approveReq(${r.id})" style="background:#22c55e; color:black; padding:2px 5px; font-size:10px;">Approve</button>
-                <button onclick="rejectReq(${r.id})" style="background:#ef4444; color:white; padding:2px 5px; font-size:10px;">Reject</button>
-            </div>
-        `).join('') || "No new requests.";
-        document.getElementById('pendingList').innerHTML = html;
-    }
-
-    function approveReq(id) {
-        let reqs = JSON.parse(localStorage.getItem('ab_requests') || "[]");
-        let r = reqs.find(x => x.id === id);
-        if(r) {
-            r.status = 'approved';
-            if(r.type === 'Deposit' && r.pID === playerID) {
-                coins += parseInt(r.amount);
-                updateUI();
-            }
-            // Note: Real world mein ye database se doosre user ke coins update karega.
-            localStorage.setItem('ab_requests', JSON.stringify(reqs));
-            renderAdminRequests();
-            alert("Request Approved!");
-        }
-    }
-
-    function rejectReq(id) {
-        let reqs = JSON.parse(localStorage.getItem('ab_requests') || "[]");
-        let r = reqs.find(x => x.id === id);
-        if(r) {
-            r.status = 'rejected';
-            if(r.type === 'Withdrawal' && r.pID === playerID) {
-                coins += parseInt(r.amount); // Refund coins if rejected
-                updateUI();
-            }
-            localStorage.setIt
+    function quick(val) { document.getElementById('amount').value = (parseInt(document.getElementById('amount').value) || 0) + val; }
+    function doubleBet() { document.getElementById('amount').value = (parseInt(document.getElementById('amount').value) || 0) * 2; }
+    selectSide('andar');
+</script>
+</body>
+</html>

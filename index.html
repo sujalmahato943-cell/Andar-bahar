@@ -128,7 +128,17 @@
     let myCoins = 0;
     let selectedSide = 'andar';
     let betPlacedThisRound = false;
-
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyAPRAHTuiVTxDWng6KzCTDZ3-70P2YSN98",
+  authDomain: "my-first-app-cad29.firebaseapp.com",
+  databaseURL: "https://my-first-app-cad29-default-rtdb.firebaseio.com",
+  projectId: "my-first-app-cad29",
+  storageBucket: "my-first-app-cad29.firebasestorage.app",
+  messagingSenderId: "899016030652",
+  appId: "1:899016030652:web:b7d3c0b1294b2db6f453b9",
+  measurementId: "G-7M1JKFC5R3"
+};
     // Naye user ke aate hi unique database registration logic
     if (!myId) {
         myId = 'User_' + Math.floor(10000 + Math.random() * 90000);

@@ -4,198 +4,397 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Andar Bahar Pro - Master Control</title>
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
     <style>
         body { background: #0f172a; color: #fff; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; margin: 0; padding: 10px; overflow-x: hidden; }
         .container { max-width: 600px; margin: auto; }
-        .card { width: 50px; height: 75px; background: #fff; border-radius: 6px; margin: 4px; display: inline-flex; flex-direction: column; justify-content: space-between; padding: 5px; font-weight: bold; animation: pop 0.3s ease; box-shadow: 0 2px 5px rgba(0,0,0,0.3); color: #000; font-size: 14px; }
+        
+        /* Card Styling */
+        .card {
+            width: 45px; height: 65px; background: #fff; border-radius: 6px;
+            margin: 2px; display: inline-flex; flex-direction: column;
+            justify-content: space-between; padding: 5px; font-weight: bold;
+            animation: pop 0.3s ease; box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            color: #000; font-size: 12px;
+        }
         @keyframes pop { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-        .bigCard { width: 100px; height: 140px; background: #fff; border-radius: 12px; margin: 15px auto; display: flex; flex-direction: column; justify-content: space-between; padding: 10px; font-weight: bold; font-size: 24px; color: #000; border: 4px solid #3b82f6; animation: pop 0.5s ease; }
-        .red { color: #ef4444; } .black { color: #1e293b; }
+
+        .bigCard {
+            width: 90px; height: 130px; background: #fff; border-radius: 12px;
+            margin: 15px auto; display: flex; flex-direction: column;
+            justify-content: space-between; padding: 10px; font-weight: bold;
+            font-size: 22px; color: #000; border: 4px solid #3b82f6;
+            animation: pop 0.5s ease;
+        }
+
+        .red { color: #ef4444; }
+        .black { color: #1e293b; }
+
         .row { display: flex; gap: 10px; justify-content: center; margin: 15px 0; }
         .box { flex: 1; background: #1e293b; padding: 15px; border-radius: 12px; min-height: 180px; border: 2px solid transparent; transition: 0.3s; }
-        .win { border: 3px solid #22c55e !important; background: #064e3b !important; }
-        button { padding: 10px 15px; margin: 5px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        .win { border: 3px solid #22c55e !important; background: #064e3b !important; transform: scale(1.02); }
+
+        button { padding: 10px 15px; margin: 5px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s; }
         .btn-bet { background: #3b82f6; color: white; width: 45%; border: 2px solid transparent; }
-        .activeBtn { border-color: #fff; background: #22c55e !important; }
+        .activeBtn { border-color: #fff; background: #22c55e !important; transform: scale(1.05); box-shadow: 0 0 10px #22c55e; }
         .btn-place { background: #22c55e; color: white; width: 90%; font-size: 18px; margin-top: 10px; }
-        input { padding: 10px; border-radius: 8px; border: none; text-align: center; background: #f1f5f9; color: #000; }
-        .panel { background: #1e293b; padding: 15px; border-radius: 12px; margin-top: 15px; }
-        .status-bar { background: #1e293b; padding: 10px; border-radius: 8px; display: flex; justify-content: space-around; }
+        .btn-place:disabled { background: #475569; cursor: not-allowed; opacity: 0.5; }
+        input { padding: 10px; border-radius: 8px; border: none; text-align: center; font-size: 16px; background: #f1f5f9; color: #000; }
+
+        .panel { background: #1e293b; padding: 15px; border-radius: 12px; margin-top: 15px; border: 1px solid #334155; }
+        .status-bar { background: #1e293b; padding: 10px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-around; align-items: center; font-size: 14px; }
+        
+        #history span { display: inline-block; width: 25px; height: 25px; line-height: 25px; margin: 3px; border-radius: 50%; font-weight: bold; font-size: 12px; }
+        .a-hist { background: #22c55e; color: #000; }
+        .b-hist { background: #3b82f6; color: #fff; }
+
+        /* Admin Layout */
         #adminOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #020617; z-index: 1000; padding: 20px; box-sizing: border-box; overflow-y: auto; }
-        .ctrl-active { border: 2px solid #fbbf24; box-shadow: 0 0 10px #fbbf24; }
+        .admin-stat-box { display: flex; justify-content: space-around; background: #111827; padding: 15px; border-radius: 10px; margin-bottom: 15px; border: 1px solid #fbbf24; }
+        .stat-val { font-size: 20px; font-weight: bold; color: #fbbf24; }
+        .admin-ctrl-btn { width: 30%; font-size: 11px; margin: 5px; border: 2px solid transparent; }
+        .ctrl-active { border-color: #fbbf24; box-shadow: 0 0 10px #fbbf24; transform: scale(1.05); }
+        .req-card { background: #1e293b; border-left: 5px solid #fbbf24; padding: 10px; margin: 10px 0; border-radius: 8px; text-align: left; font-size: 13px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>🃏 Andar Bahar Pro</h2>
-    <p style="font-size:12px; color:#94a3b8">Your ID: <b id="displayId">...</b></p>
+    <div style="display:flex; justify-content: space-between; align-items: center;">
+        <h3 style="margin:10px 0;">🃏 Andar Bahar Pro</h3>
+        <span id="playerIDDisplay" style="font-size: 12px; color: #94a3b8;">ID: --</span>
+    </div>
 
     <div class="status-bar">
-        <span>Coins: <b id="coins" style="color:#22c55e">0</b></span>
-        <span>Time: <b id="time" style="color:#ef4444">0</b>s</span>
+        <span>Coins: <b id="coins" style="color:#22c55e">500</b></span>
+        <span>Bet: <b id="totalBetDisplay" style="color:#fbbf24">0</b></span>
+        <span>Time: <b id="time" style="color:#ef4444">10</b>s</span>
     </div>
 
     <div id="joker"></div>
-    <div id="result" style="font-size:22px; font-weight:bold; height:30px; margin:10px; color:#fbbf24;">Syncing Game...</div>
+    <div id="result" style="font-size:20px; font-weight:bold; height:30px; margin:10px; color:#fbbf24;">Waiting...</div>
 
     <div class="row">
-        <div class="box" id="andarBox"><h3>ANDAR</h3><div id="andar"></div></div>
-        <div class="box" id="baharBox"><h3>BAHAR</h3><div id="bahar"></div></div>
+        <div class="box" id="andarBox">
+            <h4 style="margin:0">ANDAR</h4>
+            <div id="andar"></div>
+        </div>
+        <div class="box" id="baharBox">
+            <h4 style="margin:0">BAHAR</h4>
+            <div id="bahar"></div>
+        </div>
     </div>
 
+    <!-- Bet UI -->
     <div class="panel">
         <div class="row" style="margin:0 0 10px 0;">
             <button id="andarBtn" class="btn-bet" onclick="selectSide('andar')">ANDAR</button>
             <button id="baharBtn" class="btn-bet" onclick="selectSide('bahar')">BAHAR</button>
         </div>
         <input id="amount" type="number" value="100" style="width:80px;">
+        <button onclick="quick(100)">+100</button>
+        <button onclick="doubleBet()">2x</button>
         <button class="btn-place" id="placeBtn" onclick="placeBet()">PLACE BET</button>
-        <div id="betMsg" style="margin-top:10px; font-weight:bold;"></div>
+        <div id="betMsg" style="margin-top:10px; font-size:14px; min-height:20px; font-weight:bold; color:#94a3b8"></div>
     </div>
+
+    <!-- Wallet Section -->
+    <div class="row">
+        <div class="panel" style="flex:1; border-color: #22c55e; border-style: dashed; padding: 10px;">
+            <h4 style="margin:0 0 5px 0;">💰 Deposit</h4>
+            <div id="displayUPI" style="font-size:10px; color:#fbbf24; margin-bottom:5px;">UPI: loading...</div>
+            <input type="number" id="userDepAmt" placeholder="Amt" style="width:90%; margin-bottom:5px; font-size:11px;">
+            <input type="text" id="userUTR" placeholder="UTR/Ref No." style="width:90%; margin-bottom:5px; font-size:11px;">
+            <button onclick="requestDeposit()" style="background:#22c55e; color:white; width:95%; padding: 5px; font-size:11px;">Submit Request</button>
+        </div>
+        <div class="panel" style="flex:1; border-color: #ef4444; border-style: dashed; padding: 10px;">
+            <h4 style="margin:0 0 5px 0;">🏦 Withdraw</h4>
+            <input type="number" id="userWithAmt" placeholder="Amt" style="width:90%; margin-bottom:5px; font-size:11px;">
+            <input type="text" id="userUPI" placeholder="Your UPI ID" style="width:90%; margin-bottom:5px; font-size:11px;">
+            <button onclick="requestWithdrawal()" style="background:#ef4444; color:white; width:95%; padding: 5px; font-size:11px;">Withdraw Now</button>
+        </div>
+    </div>
+
+    <div id="history" style="margin-top:20px; min-height: 35px;"></div>
+    <button onclick="checkAdmin()" style="margin-top:30px; opacity:0.2; background:none; color:white; border:none; font-size:10px;">Admin Panel</button>
 </div>
 
+<!-- ADMIN CONTROL PANEL -->
 <div id="adminOverlay">
-    <button onclick="document.getElementById('adminOverlay').style.display='none'" style="background:#ef4444; color:white; float:right;">Exit</button>
-    <h2>🛠 Master Control</h2>
+    <button onclick="closeAdmin()" style="background:#ef4444; color:white; float:right;">Exit</button>
+    <h2 style="color:#fbbf24;">🛠 Master Control Panel</h2>
     
-    <div class="panel" style="border:2px solid #fbbf24;">
-        <h4>🎯 Control Winner</h4>
-        <button id="ctrlAndar" onclick="setWinner('andar')">ANDAR WIN</button>
-        <button id="ctrlBahar" onclick="setWinner('bahar')">BAHAR WIN</button>
-        <button id="ctrlAuto" class="ctrl-active" onclick="setWinner('auto')">AUTO</button>
+    <div class="admin-stat-box">
+        <div class="stat-item">
+            <p style="margin:0; font-size:12px;">Andar Total</p>
+            <div id="admAndarBet" class="stat-val">0</div>
+        </div>
+        <div class="stat-item" style="border-left: 1px solid #334155; border-right: 1px solid #334155; padding:0 15px;">
+            <p style="margin:0; font-size:12px;">Bahar Total</p>
+            <div id="admBaharBet" class="stat-val">0</div>
+        </div>
+        <div class="stat-item">
+            <p style="margin:0; font-size:12px;">Game Status</p>
+            <div id="admStatus" style="color:#22c55e; font-weight:bold; font-size:14px; margin-top:5px;">Betting...</div>
+        </div>
+    </div>
+
+    <!-- WINNER CONTROL -->
+    <div class="panel" style="background:#1e293b; border:2px solid #fbbf24;">
+        <h4 style="margin-top:0; color:#fbbf24;">🎯 Control Next Winner</h4>
+        <button id="ctrlAndar" class="admin-ctrl-btn" style="background:#22c55e; color:black;" onclick="setNextWinner('andar')">ANDAR WIN</button>
+        <button id="ctrlBahar" class="admin-ctrl-btn" style="background:#3b82f6; color:white;" onclick="setNextWinner('bahar')">BAHAR WIN</button>
+        <button id="ctrlAuto" class="admin-ctrl-btn ctrl-active" style="background:#64748b; color:white;" onclick="setNextWinner('auto')">AUTO (RANDOM)</button>
+    </div>
+
+    <!-- PENDING REQUESTS -->
+    <h4 style="text-align:left; color:#22c55e; margin-bottom:5px;">📩 User Requests (Deposit/Withdraw)</h4>
+    <div id="pendingList" style="max-height: 200px; overflow-y: auto; background: #0f172a; padding: 10px; border-radius: 8px;"></div>
+
+    <!-- PLAYER LIST & MANUAL ADJUST -->
+    <h4 style="text-align:left; color:#3b82f6; margin-top:20px; margin-bottom:5px;">👥 Active Players Control</h4>
+    <div id="playerManagement" style="background:#1e293b; padding:10px; border-radius:8px; text-align:left; font-size:12px;">
+        <!-- Player list will load here -->
     </div>
 
     <div class="panel">
-        <h4>💰 Edit User Coins</h4>
-        <input type="text" id="adminTargetId" placeholder="User-ID (e.g. User-1234)"><br><br>
-        <input type="number" id="adminCoinAmt" placeholder="Amount">
-        <div class="row">
-            <button onclick="adminCoinAction('add')" style="background:#22c55e; flex:1;">+ Add</button>
-            <button onclick="adminCoinAction('sub')" style="background:#ef4444; flex:1;">- Minus</button>
-        </div>
+        <h4 style="margin-top:0;">⚙️ System Settings</h4>
+        <input type="text" id="newUPIInput" placeholder="Change Admin UPI ID" style="width:180px; margin-bottom:5px;"><br>
+        <button onclick="updateAdminUPI()" style="background:#3b82f6; color:white; font-size:12px;">Update UPI Address</button>
     </div>
 </div>
 
 <script>
-    // 1. APNA FIREBASE CONFIG YAHAN PASTE KAREIN
-    const firebaseConfig = {
-        apiKey: "AIzaSyAPRAHTuiVTxDWng6Kz...",
-        authDomain: "my-first-app-cad29.firebaseapp.com",
-        databaseURL: "https://my-first-app-cad29-default-rtdb.firebaseio.com",
-        projectId: "my-first-app-cad29",
-        storageBucket: "my-first-app-cad29.appspot.com",
-        messagingSenderId: "...",
-        appId: "..."
-    };
-
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-
-    // ID Setup & Notification
-    let myId = localStorage.getItem('player_id');
-    if (!myId) {
-        myId = 'User-' + Math.floor(1000 + Math.random() * 9000);
-        localStorage.setItem('player_id', myId);
-        db.ref('players/' + myId).set({ coins: 500, lastSeen: Date.now() });
-        db.ref('notifications/').push({ msg: "New Player Joined: " + myId, time: Date.now() });
-    }
-    document.getElementById('displayId').innerText = myId;
-
-    // Check Admin
-    const urlParams = new URLSearchParams(window.location.search);
-    if(urlParams.get('admin') === 'true') {
-        document.getElementById('adminOverlay').style.display = 'block';
-    }
-
-    // Sync Game State
-    db.ref('game_state').on('value', (snap) => {
-        const state = snap.val();
-        if(!state) return;
-        document.getElementById('time').innerText = state.timer;
-        document.getElementById('result').innerText = state.status;
-        
-        if(state.timer === 0) {
-            showResultCards(state.winner, state.joker);
-        } else {
-            resetTable(state.joker);
-        }
-    });
-
-    // Sync Coins
-    db.ref('players/' + myId + '/coins').on('value', (snap) => {
-        document.getElementById('coins').innerText = snap.val() || 0;
-    });
-
+    // --- Master Config & State ---
+    const suits = ['♥', '♦', '♣', '♠'];
+    const ranks = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+    
+    let playerID = localStorage.getItem('ab_player_id') || 'AB-' + Math.floor(1000 + Math.random() * 9000);
+    localStorage.setItem('ab_player_id', playerID);
+    
+    let coins = parseInt(localStorage.getItem('ab_coins')) || 500;
+    let adminUPI = localStorage.getItem('ab_admin_upi') || "paytmqr123@paytm";
+    
+    let currentBets = [];
+    let deck = [], joker = null;
+    let timerInt, gameInt;
+    let bettingOpen = false;
     let selectedSide = 'andar';
+    let historyData = JSON.parse(localStorage.getItem('ab_history')) || [];
+    let forcedWinner = 'auto';
+
+    // Simulated "Server" Data
+    let liveAndarTotal = 0;
+    let liveBaharTotal = 0;
+
+    // --- Core Game Functions ---
+    function updateUI() {
+        document.getElementById('coins').innerText = coins;
+        document.getElementById('playerIDDisplay').innerText = "ID: " + playerID;
+        document.getElementById('totalBetDisplay').innerText = liveAndarTotal + liveBaharTotal;
+        localStorage.setItem('ab_coins', coins);
+    }
+
     function selectSide(side) {
         selectedSide = side;
-        document.getElementById('andarBtn').classList.toggle('activeBtn', side === 'andar');
-        document.getElementById('baharBtn').classList.toggle('activeBtn', side === 'bahar');
+        document.getElementById('andarBtn').className = (side === 'andar' ? 'btn-bet activeBtn' : 'btn-bet');
+        document.getElementById('baharBtn').className = (side === 'bahar' ? 'btn-bet activeBtn' : 'btn-bet');
     }
 
     function placeBet() {
+        if (!bettingOpen) return alert("Wait for next round!");
         let amt = parseInt(document.getElementById('amount').value);
-        let currentCoins = parseInt(document.getElementById('coins').innerText);
-        if(amt > currentCoins) return alert("Low Balance!");
+        if (amt <= 0 || isNaN(amt) || amt > coins) return alert("Check your balance!");
         
-        db.ref('live_bets/' + myId).set({ side: selectedSide, amount: amt });
-        db.ref('players/' + myId + '/coins').set(currentCoins - amt);
-        document.getElementById('betMsg').innerText = "Bet Placed: " + amt;
-    }
-
-    // Admin Functions
-    function setWinner(side) {
-        db.ref('game_state/forced').set(side);
-        alert("Next winner set to: " + side);
-    }
-
-    function adminCoinAction(type) {
-        let tid = document.getElementById('adminTargetId').value;
-        let amt = parseInt(document.getElementById('adminCoinAmt').value);
-        if(!tid || !amt) return alert("Details bhariye!");
+        coins -= amt;
+        currentBets.push({ side: selectedSide, amount: amt });
+        if(selectedSide === 'andar') liveAndarTotal += amt; else liveBaharTotal += amt;
         
-        db.ref('players/' + tid + '/coins').transaction((current) => {
-            return (type === 'add') ? (current || 0) + amt : (current || 0) - amt;
-        });
-        alert("Success!");
+        updateUI();
+        refreshAdminStats();
+        document.getElementById('betMsg').innerText = `Placed: ${amt} on ${selectedSide.toUpperCase()}`;
     }
 
-    function resetTable(jokerCard) {
+    function startRound() {
+        liveAndarTotal = 0; liveBaharTotal = 0;
+        currentBets = []; 
+        updateUI(); 
+        refreshAdminStats();
+
         document.getElementById('andar').innerHTML = '';
         document.getElementById('bahar').innerHTML = '';
         document.getElementById('andarBox').classList.remove('win');
         document.getElementById('baharBox').classList.remove('win');
-        if(jokerCard) {
-            document.getElementById('joker').innerHTML = `<div class="bigCard"><div>${jokerCard}</div></div>`;
-        }
-    }
+        document.getElementById('betMsg').innerText = ''; 
+        document.getElementById('result').innerText = 'Shuffling...';
+        
+        deck = [];
+        for (let s of suits) for (let r of ranks) deck.push({ rank: r, suit: s });
+        deck = deck.sort(() => Math.random() - 0.5);
+        
+        joker = deck.shift();
+        let color = (joker.suit === '♥' || joker.suit === '♦') ? 'red' : 'black';
+        document.getElementById('joker').innerHTML = `<div class="bigCard"><div class="${color}">${joker.rank}${joker.suit}</div><div style="font-size:35px; align-self:center; color:${color}">${joker.suit}</div><div class="${color}" style="text-align:right">${joker.rank}${joker.suit}</div></div>`;
 
-    function showResultCards(winner, joker) {
-        document.getElementById(winner + 'Box').classList.add('win');
-        document.getElementById('result').innerText = winner.toUpperCase() + " WINS!";
-    }
+        bettingOpen = true;
+        let timeLeft = 10;
+        document.getElementById('placeBtn').disabled = false;
 
-    // AUTO GAME LOGIC (Admin browser handle karega timer)
-    if(urlParams.get('admin') === 'true') {
-        let t = 15;
-        setInterval(() => {
-            t--;
-            if(t < 0) {
-                t = 15;
-                db.ref('game_state/forced').get().then(s => {
-                    let win = s.val() === 'auto' ? (Math.random() > 0.5 ? 'andar' : 'bahar') : s.val();
-                    db.ref('game_state').update({ timer: t, winner: win, status: "Winner: " + win, joker: "K♥" });
-                    db.ref('game_state/forced').set('auto');
-                });
-            } else {
-                db.ref('game_state/timer').set(t);
-                db.ref('game_state/status').set("Betting Open...");
+        timerInt = setInterval(() => {
+            timeLeft--;
+            document.getElementById('time').innerText = timeLeft;
+            if (timeLeft <= 0) {
+                clearInterval(timerInt);
+                bettingOpen = false;
+                document.getElementById('placeBtn').disabled = true;
+                dealCards();
             }
         }, 1000);
     }
-</script>
-</body>
-</html>
+
+    function dealCards() {
+        let turn = 0;
+        gameInt = setInterval(() => {
+            let card;
+            // Admin logic
+            if (forcedWinner === 'andar' && turn >= 4) card = { rank: joker.rank, suit: suits[0] };
+            else if (forcedWinner === 'bahar' && turn >= 5) card = { rank: joker.rank, suit: suits[0] };
+            else {
+                card = deck.shift();
+                if(forcedWinner !== 'auto' && card.rank === joker.rank) { deck.push(card); card = deck.shift(); }
+            }
+
+            let cardDiv = document.createElement('div');
+            let color = (card.suit === '♥' || card.suit === '♦') ? 'red' : 'black';
+            cardDiv.className = 'card';
+            cardDiv.innerHTML = `<span class="${color}">${card.rank}${card.suit}</span><span class="${color}" style="font-size:16px; text-align:center">${card.suit}</span>`;
+            
+            if (turn % 2 === 0) {
+                document.getElementById('andar').appendChild(cardDiv);
+                if (card.rank === joker.rank) finish('andar');
+            } else {
+                document.getElementById('bahar').appendChild(cardDiv);
+                if (card.rank === joker.rank) finish('bahar');
+            }
+            turn++;
+        }, 800);
+    }
+
+    function finish(winner) {
+        clearInterval(gameInt);
+        document.getElementById('result').innerText = `${winner.toUpperCase()} WINS!`;
+        document.getElementById(winner + 'Box').classList.add('win');
+        
+        let winAmt = 0;
+        currentBets.forEach(b => { if (b.side === winner) winAmt += b.amount * 2; });
+        if (winAmt > 0) {
+            coins += winAmt;
+            document.getElementById('betMsg').innerHTML = `<span style="color:#22c55e">You Won ₹${winAmt}!</span>`;
+        } else if (currentBets.length > 0) {
+            document.getElementById('betMsg').innerHTML = `<span style="color:#ef4444">Loss! Try Again.</span>`;
+        }
+        
+        updateUI();
+        forcedWinner = 'auto'; // Reset admin control after win
+        
+        historyData.push(winner === 'andar' ? 'A' : 'B');
+        if (historyData.length > 12) historyData.shift();
+        localStorage.setItem('ab_history', JSON.stringify(historyData));
+        renderHistory();
+        
+        setTimeout(startRound, 4000);
+    }
+
+    function renderHistory() {
+        document.getElementById('history').innerHTML = historyData.map(h => `<span class="${h === 'A' ? 'a-hist' : 'b-hist'}">${h}</span>`).join('');
+    }
+
+    // --- Admin & Master Logic ---
+    function checkAdmin() {
+        let pass = prompt("Enter Master Password:");
+        if (pass === "admin123") {
+            document.getElementById('adminOverlay').style.display = 'block';
+            renderAdminRequests(); 
+            renderPlayerList();
+            refreshAdminStats();
+        }
+    }
+    
+    function closeAdmin() { document.getElementById('adminOverlay').style.display = 'none'; }
+
+    function setNextWinner(side) {
+        forcedWinner = side;
+        document.getElementById('ctrlAndar').classList.toggle('ctrl-active', side === 'andar');
+        document.getElementById('ctrlBahar').classList.toggle('ctrl-active', side === 'bahar');
+        document.getElementById('ctrlAuto').classList.toggle('ctrl-active', side === 'auto');
+    }
+
+    function refreshAdminStats() {
+        document.getElementById('admAndarBet').innerText = liveAndarTotal;
+        document.getElementById('admBaharBet').innerText = liveBaharTotal;
+        document.getElementById('admStatus').innerText = bettingOpen ? "Taking Bets" : "Dealing Cards";
+    }
+
+    // --- Wallet & Request System ---
+    function requestDeposit() {
+        let amt = document.getElementById('userDepAmt').value;
+        let utr = document.getElementById('userUTR').value;
+        if(!amt || utr.length < 4) return alert("Fill Amount and UTR properly!");
+        
+        let reqs = JSON.parse(localStorage.getItem('ab_requests') || "[]");
+        reqs.push({id: Date.now(), pID: playerID, type: 'Deposit', amount: amt, info: utr, status: 'pending'});
+        localStorage.setItem('ab_requests', JSON.stringify(reqs));
+        alert("Deposit Request Sent to Admin!");
+    }
+
+    function requestWithdrawal() {
+        let amt = parseInt(document.getElementById('userWithAmt').value);
+        let upi = document.getElementById('userUPI').value;
+        if(!amt || upi.length < 5) return alert("Invalid details!");
+        if(amt > coins) return alert("Insufficient Balance!");
+
+        coins -= amt; updateUI();
+        let reqs = JSON.parse(localStorage.getItem('ab_requests') || "[]");
+        reqs.push({id: Date.now(), pID: playerID, type: 'Withdrawal', amount: amt, info: upi, status: 'pending'});
+        localStorage.setItem('ab_requests', JSON.stringify(reqs));
+        alert("Withdrawal Request Sent!");
+    }
+
+    function renderAdminRequests() {
+        let reqs = JSON.parse(localStorage.getItem('ab_requests') || "[]");
+        let html = reqs.filter(r => r.status === 'pending').map(r => `
+            <div class="req-card">
+                <b>${r.type}</b> | User: ${r.pID} | ₹${r.amount} <br>
+                <small>Info: ${r.info}</small> <br>
+                <button onclick="approveReq(${r.id})" style="background:#22c55e; color:black; padding:2px 5px; font-size:10px;">Approve</button>
+                <button onclick="rejectReq(${r.id})" style="background:#ef4444; color:white; padding:2px 5px; font-size:10px;">Reject</button>
+            </div>
+        `).join('') || "No new requests.";
+        document.getElementById('pendingList').innerHTML = html;
+    }
+
+    function approveReq(id) {
+        let reqs = JSON.parse(localStorage.getItem('ab_requests') || "[]");
+        let r = reqs.find(x => x.id === id);
+        if(r) {
+            r.status = 'approved';
+            if(r.type === 'Deposit' && r.pID === playerID) {
+                coins += parseInt(r.amount);
+                updateUI();
+            }
+            // Note: Real world mein ye database se doosre user ke coins update karega.
+            localStorage.setItem('ab_requests', JSON.stringify(reqs));
+            renderAdminRequests();
+            alert("Request Approved!");
+        }
+    }
+
+    function rejectReq(id) {
+        let reqs = JSON.parse(localStorage.getItem('ab_requests') || "[]");
+        let r = reqs.find(x => x.id === id);
+        if(r) {
+            r.status = 'rejected';
+            if(r.type === 'Withdrawal' && r.pID === playerID) {
+                coins += parseInt(r.amount); // Refund coins if rejected
+                updateUI();
+            }
+            localStorage.setIt

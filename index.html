@@ -1,131 +1,175 @@
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getDatabase, ref, onValue, update, push } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Andar Bahar Pro</title>
+    <style>
+        body { background-color: #0b1528; color: white; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; margin: 0; padding: 10px; }
+        .header { background: #112240; padding: 15px; border-radius: 10px; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        .account-id { color: #f59e0b; font-weight: bold; font-size: 14px; margin-bottom: 5px; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; background: #1e3a8a; padding: 10px; border-radius: 8px; font-weight: bold; font-size: 15px; }
+        .status-banner { font-size: 28px; font-weight: bold; color: #facc15; margin: 20px 0; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+        .board { display: flex; gap: 15px; justify-content: center; margin-bottom: 20px; }
+        .zone { background: #1e293b; border: 2px solid #334155; border-radius: 12px; width: 45%; min-height: 180px; padding: 10px; position: relative; }
+        .zone.win { border-color: #10b981; background: #064e3b; }
+        .zone-title { font-size: 18px; font-weight: bold; color: #94a3b8; margin-bottom: 10px; }
+        .card-display { display: flex; flex-wrap: wrap; gap: 5px; justify-content: center; margin-top: 10px; }
+        .joker-area { margin: 15px auto; width: 100px; height: 130px; }
+        .bigCard { width: 90px; height: 125px; background: white; border-radius: 8px; color: black; display: flex; flex-direction: column; justify-content: space-between; padding: 5px; box-sizing: border-box; font-weight: bold; box-shadow: 0 4px 8px rgba(0,0,0,0.4); margin: 0 auto; }
+        .card { width: 50px; height: 75px; background: white; border-radius: 5px; color: black; display: flex; flex-direction: column; justify-content: space-between; padding: 3px; box-sizing: border-box; font-size: 12px; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+        .red { color: #dc2626; } .black { color: #000000; }
+        .controls { background: #112240; padding: 15px; border-radius: 12px; max-width: 500px; margin: 0 auto; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        .bet-buttons { display: flex; gap: 10px; justify-content: center; margin-bottom: 15px; }
+        .btn-bet { flex: 1; padding: 12px; font-size: 16px; font-weight: bold; border: 2px solid #2563eb; background: transparent; color: white; border-radius: 8px; cursor: pointer; }
+        .btn-bet.activeBtn { background: #2563eb; }
+        .input-area { display: flex; gap: 8px; justify-content: center; align-items: center; margin-bottom: 15px; }
+        .input-box { width: 100px; padding: 10px; font-size: 16px; border-radius: 6px; border: none; text-align: center; font-weight: bold; }
+        .btn-quick { background: #334155; color: white; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; }
+        .btn-action { background: #10b981; color: white; border: none; padding: 14px; width: 100%; font-size: 18px; font-weight: bold; border-radius: 8px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
+        .btn-action:disabled { background: #4b5563; cursor: not-allowed; }
+    </style>
+</head>
+<body>
 
-    const firebaseConfig = {
-        apiKey: "AIzaSyAPRAHTuiVTxDwng6KzCTDZ3-70P2YSN98",
-        authDomain: "my-first-app-cad29.firebaseapp.com",
-        databaseURL: "https://my-first-app-cad29-default-rtdb.firebaseio.com",
-        projectId: "my-first-app-cad29",
-        storageBucket: "my-first-app-cad29.appspot.com",
-        messagingSenderId: "899016030652",
-        appId: "1:899016030652:web:b7d3c0b1294b2db6f453b9",
-        measurementId: "G-7M1JKFC5R3"
-    };
+    <div class="header">
+        <div id="displayId" class="account-id">My Account ID: User-1593</div>
+        <div class="stats-grid">
+            <div>Coins: <span id="coinsDisplay" style="color:#10b981;">5000</span></div>
+            <div>Bet: <span id="betDisplay" style="color:#facc15;">0</span></div>
+            <div>Time: <span id="time" style="color:#ef4444;">15s</span></div>
+        </div>
+    </div>
 
-    const app = initializeApp(firebaseConfig);
-    const database = getDatabase(app);
+    <div id="joker" class="joker-area"></div>
+    <div id="result" class="status-banner">Wait...</div>
 
-    let myId = localStorage.getItem('player_id') || 'Player_' + Math.floor(1000 + Math.random() * 9000);
-    localStorage.setItem('player_id', myId);
-    let myCoins = 5000; 
-    let selectedSide = 'andar';
-    let betPlacedThisRound = false;
+    <div class="board">
+        <div id="andarBox" class="zone">
+            <div class="zone-title">ANDAR</div>
+            <div id="andar" class="card-display"></div>
+        </div>
+        <div id="baharBox" class="zone">
+            <div class="zone-title">BAHAR</div>
+            <div id="bahar" class="card-display"></div>
+        </div>
+    </div>
 
-    const idDisplay = document.getElementById('displayId') || document.querySelector('[id*="ID"]') || document.body;
-    if (idDisplay) {
-        if(idDisplay.innerHTML.includes("Loading ID...")) {
-            idDisplay.innerHTML = idDisplay.innerHTML.replace("Loading ID...", myId);
-        } else {
-            idDisplay.innerText = "My Account ID: " + myId;
-        }
-    }
+    <div class="controls">
+        <div class="bet-buttons">
+            <button id="andarBtn" class="btn-bet activeBtn" onclick="selectSide('andar')">ANDAR</button>
+            <button id="baharBtn" class="btn-bet" onclick="selectSide('bahar')">BAHAR</button>
+        </div>
+        <div class="input-area">
+            <input type="number" id="amount" class="input-box" value="100" min="10">
+            <button class="btn-quick" onclick="quick(100)">+100</button>
+            <button class="btn-quick" onclick="doubleBet()">2x</button>
+        </div>
+        <button id="placeBtn" class="btn-action" onclick="placeBet()">PLACE BET</button>
+    </div>
 
-    onValue(ref(database, 'game'), (snapshot) => {
-        const game = snapshot.val();
-        if (!game) return;
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-        let timeText = game.time !== undefined ? game.time + "s" : "0s";
-        const timeEl = document.getElementById('time') || document.querySelector('[id*="time"]');
-        if(timeEl) timeEl.innerText = timeText;
+        const firebaseConfig = {
+            apiKey: "AIzaSyAPRAHTuiVTxDwng6KzCTDZ3-70P2YSN98",
+            authDomain: "my-first-app-cad29.firebaseapp.com",
+            databaseURL: "https://my-first-app-cad29-default-rtdb.firebaseio.com",
+            projectId: "my-first-app-cad29",
+            storageBucket: "my-first-app-cad29.appspot.com",
+            messagingSenderId: "899016030652",
+            appId: "1:899016030652:web:b7d3c0b1294b2db6f453b9"
+        };
 
-        if (game.status === 'betting') {
-            betPlacedThisRound = false;
-            if(document.getElementById('placeBtn')) document.getElementById('placeBtn').disabled = false;
-            if(document.getElementById('result')) document.getElementById('result').innerText = 'Wait...';
-            if(document.getElementById('joker')) document.getElementById('joker').innerHTML = '';
-            if(document.getElementById('andar')) document.getElementById('andar').innerHTML = '';
-            if(document.getElementById('bahar')) document.getElementById('bahar').innerHTML = '';
-            if(document.getElementById('andarBox')) document.getElementById('andarBox').classList.remove('win');
-            if(document.getElementById('baharBox')) document.getElementById('baharBox').classList.remove('win');
-        } 
-        else if (game.status === 'dealing') {
-            if(document.getElementById('placeBtn')) document.getElementById('placeBtn').disabled = true;
-            if(document.getElementById('result')) document.getElementById('result').innerText = 'Dealing Cards...';
-            if(game.joker) buildJokerCard(game.joker);
-            renderCurrentCards(game.andarCards, game.baharCards);
-        } 
-        else if (game.status === 'finished') {
-            if(document.getElementById('placeBtn')) document.getElementById('placeBtn').disabled = true;
-            if(document.getElementById('result')) document.getElementById('result').innerText = `${game.winner.toUpperCase()} WINS!`;
-            if(document.getElementById('andarBox')) document.getElementById('andarBox').classList.toggle('win', game.winner === 'andar');
-            if(document.getElementById('baharBox')) document.getElementById('baharBox').classList.toggle('win', game.winner === 'bahar');
-        }
-    });
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
 
-    function buildJokerCard(joker) {
-        let color = (joker.suit === '♥' || joker.suit === '♦') ? 'red' : 'black';
-        if(document.getElementById('joker')) {
+        let myId = localStorage.getItem('player_id') || 'User-' + Math.floor(1000 + Math.random() * 9000);
+        localStorage.setItem('player_id', myId);
+        let myCoins = 5000;
+        let selectedSide = 'andar';
+        let betPlacedThisRound = false;
+
+        document.getElementById('displayId').innerText = "My Account ID: " + myId;
+
+        onValue(ref(database, 'game'), (snapshot) => {
+            const game = snapshot.val();
+            if (!game) return;
+
+            if(document.getElementById('time')) document.getElementById('time').innerText = (game.time || 0) + "s";
+
+            if (game.status === 'betting') {
+                betPlacedThisRound = false;
+                document.getElementById('placeBtn').disabled = false;
+                document.getElementById('result').innerText = 'Betting Open...';
+                document.getElementById('joker').innerHTML = '';
+                document.getElementById('andar').innerHTML = '';
+                document.getElementById('bahar').innerHTML = '';
+                document.getElementById('andarBox').classList.remove('win');
+                document.getElementById('baharBox').classList.remove('win');
+            } 
+            else if (game.status === 'dealing') {
+                document.getElementById('placeBtn').disabled = true;
+                document.getElementById('result').innerText = 'Dealing Cards...';
+                if(game.joker) buildJokerCard(game.joker);
+                renderCurrentCards(game.andarCards, game.baharCards);
+            } 
+            else if (game.status === 'finished') {
+                document.getElementById('placeBtn').disabled = true;
+                document.getElementById('result').innerText = `${game.winner.toUpperCase()} WINS!`;
+                document.getElementById('andarBox').classList.toggle('win', game.winner === 'andar');
+                document.getElementById('baharBox').classList.toggle('win', game.winner === 'bahar');
+            }
+        });
+
+        function buildJokerCard(joker) {
+            let color = (joker.suit === '♥' || joker.suit === '♦') ? 'red' : 'black';
             document.getElementById('joker').innerHTML = `<div class="bigCard"><div class="${color}">${joker.rank}${joker.suit}</div><div style="font-size:40px; align-self:center; color:${color}">${joker.suit}</div><div class="${color}" style="text-align:right">${joker.rank}${joker.suit}</div></div>`;
         }
-    }
 
-    function renderCurrentCards(andar, bahar) {
-        if(andar && document.getElementById('andar')) {
-            document.getElementById('andar').innerHTML = Object.values(andar).map(c => {
-                let color = (c.suit === '♥' || c.suit === '♦') ? 'red' : 'black';
-                return `<div class="card"><span class="${color}">${c.rank}${c.suit}</span><span class="${color}" style="font-size:18px; text-align:center">${c.suit}</span></div>`;
-            }).join('');
+        function renderCurrentCards(andar, bahar) {
+            if(andar) {
+                document.getElementById('andar').innerHTML = Object.values(andar).map(c => {
+                    let color = (c.suit === '♥' || c.suit === '♦') ? 'red' : 'black';
+                    return `<div class="card"><span class="${color}">${c.rank}${c.suit}</span><span class="${color}" style="font-size:18px; text-align:center">${c.suit}</span></div>`;
+                }).join('');
+            }
+            if(bahar) {
+                document.getElementById('bahar').innerHTML = Object.values(bahar).map(c => {
+                    let color = (c.suit === '♥' || c.suit === '♦') ? 'red' : 'black';
+                    return `<div class="card"><span class="${color}">${c.rank}${c.suit}</span><span class="${color}" style="font-size:18px; text-align:center">${c.suit}</span></div>`;
+                }).join('');
+            }
         }
-        if(bahar && document.getElementById('bahar')) {
-            document.getElementById('bahar').innerHTML = Object.values(bahar).map(c => {
-                let color = (c.suit === '♥' || c.suit === '♦') ? 'red' : 'black';
-                return `<div class="card"><span class="${color}">${c.rank}${c.suit}</span><span class="${color}" style="font-size:18px; text-align:center">${c.suit}</span></div>`;
-            }).join('');
+
+        window.selectSide = function(side) {
+            selectedSide = side;
+            document.getElementById('andarBtn').className = (side === 'andar' ? 'btn-bet activeBtn' : 'btn-bet');
+            document.getElementById('baharBtn').className = (side === 'bahar' ? 'btn-bet activeBtn' : 'btn-bet');
         }
-    }
 
-    window.selectSide = function(side) {
-        selectedSide = side;
-        if(document.getElementById('andarBtn')) document.getElementById('andarBtn').className = (side === 'andar' ? 'btn-bet activeBtn' : 'btn-bet');
-        if(document.getElementById('baharBtn')) document.getElementById('baharBtn').className = (side === 'bahar' ? 'btn-bet activeBtn' : 'btn-bet');
-    }
+        window.placeBet = function() {
+            if(betPlacedThisRound) return alert("Is round me bet lag chuki hai!");
+            let amt = parseInt(document.getElementById('amount').value);
+            if (amt <= 0 || isNaN(amt) || amt > myCoins) return alert("Invalid amount or balance!");
 
-    window.placeBet = function() {
-        if(betPlacedThisRound) return alert("Is round me bet lag chuki hai!");
-        let amt = parseInt(document.getElementById('amount').value);
-        if (amt <= 0 || isNaN(amt) || amt > myCoins) return alert("Invalid amount or balance!");
+            betPlacedThisRound = true;
+            myCoins -= amt;
+            document.getElementById('coinsDisplay').innerText = myCoins;
+            document.getElementById('betDisplay').innerText = amt;
 
-        betPlacedThisRound = true;
-        update(ref(database, 'players/' + myId), {
-            coins: myCoins - amt,
-            currentBet: { side: selectedSide, amount: amt }
-        });
-        alert("Bet Placed!");
-    }
+            update(ref(database, 'players/' + myId), {
+                coins: myCoins,
+                currentBet: { side: selectedSide, amount: amt }
+            });
+            alert("Bet Placed Successfully!");
+        }
 
-    window.requestDeposit = function() {
-        let amt = document.getElementById('userDepAmt').value;
-        let utr = document.getElementById('userUTR').value;
-        if(!amt || utr.length < 5) return alert("Details bhariye!");
-        push(ref(database, 'requests'), { id: Date.now(), userId: myId, type: 'Deposit', amount: amt, info: utr, status: 'pending' });
-        alert("Request sent!");
-        document.getElementById('userDepAmt').value = ''; document.getElementById('userUTR').value = '';
-    }
-
-    window.requestWithdrawal = function() {
-        let amt = parseInt(document.getElementById('userWithAmt').value);
-        let upi = document.getElementById('userUPI').value;
-        if(!amt || upi.length < 5 || amt > myCoins) return alert("Low balance!");
+        window.quick = function(val) { document.getElementById('amount').value = (parseInt(document.getElementById('amount').value) || 0) + val; }
+        window.doubleBet = function() { document.getElementById('amount').value = (parseInt(document.getElementById('amount').value) || 0) * 2; }
         
-        update(ref(database, 'players/' + myId), { coins: myCoins - amt });
-        push(ref(database, 'requests'), { id: Date.now(), userId: myId, type: 'Withdrawal', amount: amt, info: upi, status: 'pending' });
-        alert("Withdrawal sent!");
-        document.getElementById('userWithAmt').value = ''; document.getElementById('userUPI').value = '';
-    }
-
-    window.quick = function(val) { document.getElementById('amount').value = (parseInt(document.getElementById('amount').value) || 0) + val; }
-    window.doubleBet = function() { document.getElementById('amount').value = (parseInt(document.getElementById('amount').value) || 0) * 2; }
-    
-    window.selectSide('andar');
-</script>
+        window.selectSide('andar');
+    </script>
+</body>
+</html>

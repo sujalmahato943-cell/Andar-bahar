@@ -1,273 +1,131 @@
-<!DOCTYPE html>
-<html lang="hi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🛠 Andar Bahar Pro - Master Control Panel</title>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-    <style>
-        body { background: #020617; color: #fff; font-family: 'Segoe UI', sans-serif; padding: 20px; text-align: center; }
-        .container { max-width: 800px; margin: auto; }
-        .panel { background: #1e293b; padding: 15px; border-radius: 12px; margin-top: 15px; border: 1px solid #334155; text-align: left; }
-        .row { display: flex; gap: 10px; justify-content: center; margin: 15px 0; }
-        .admin-stat-box { display: flex; justify-content: space-around; background: #111827; padding: 15px; border-radius: 10px; margin-bottom: 15px; border: 1px solid #fbbf24; }
-        .stat-val { font-size: 20px; font-weight: bold; color: #fbbf24; }
-        .admin-ctrl-btn { width: 30%; font-size: 11px; margin: 5px; border: 2px solid transparent; padding:10px; font-weight:bold; cursor:pointer; border-radius:8px;}
-        .ctrl-active { border-color: #fbbf24; box-shadow: 0 0 10px #fbbf24; transform: scale(1.05); }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; background: #111827; }
-        th, td { padding: 10px; border: 1px solid #334155; text-align: left; font-size: 13px; }
-        th { background: #0f172a; color: #fbbf24; }
-        .req-card { background: #1e293b; border-left: 5px solid #fbbf24; padding: 10px; margin: 10px 0; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
-        input { padding: 8px; border-radius: 6px; border: none; background: #f1f5f9; color: #000; font-weight: bold; }
-        button { cursor: pointer; font-weight: bold; border-radius: 6px; border:none; padding: 7px 12px;}
-    </style>
-</head>
-<body>
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getDatabase, ref, onValue, update, push } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-<div class="container">
-    <h2>🛠 Master Control Engine Dashboard</h2>
-    <p>Engine Status: <span style="color:#22c55e; font-weight:bold;">Active Server Sync</span></p>
+    const firebaseConfig = {
+        apiKey: "AIzaSyAPRAHTuiVTxDwng6KzCTDZ3-70P2YSN98",
+        authDomain: "my-first-app-cad29.firebaseapp.com",
+        databaseURL: "https://my-first-app-cad29-default-rtdb.firebaseio.com",
+        projectId: "my-first-app-cad29",
+        storageBucket: "my-first-app-cad29.appspot.com",
+        messagingSenderId: "899016030652",
+        appId: "1:899016030652:web:b7d3c0b1294b2db6f453b9",
+        measurementId: "G-7M1JKFC5R3"
+    };
 
-    <!-- LIVE SYNC SYSTEM METRICS -->
-    <div class="admin-stat-box">
-        <div class="stat-item">
-            <p style="margin:0; font-size:12px;">Total Andar Bets Pool</p>
-            <div id="admAndarBet" class="stat-val">₹0</div>
-        </div>
-        <div class="stat-item" style="border-left: 1px solid #334155; border-right: 1px solid #334155; padding:0 15px;">
-            <p style="margin:0; font-size:12px;">Total Bahar Bets Pool</p>
-            <div id="admBaharBet" class="stat-val">₹0</div>
-        </div>
-        <div class="stat-item">
-            <p style="margin:0; font-size:12px;">Loop Timer</p>
-            <div id="admStatus" style="color:#22c55e; font-weight:bold; font-size:16px;">Timer: <span id="loopTime">0</span>s</div>
-        </div>
-    </div>
+    const app = initializeApp(firebaseConfig);
+    const database = getDatabase(app);
 
-    <!-- ENGINE BOOTER -->
-    <div class="panel" style="text-align: center;">
-        <button onclick="activateAutomationEngine()" style="background:#22c55e; color:black; font-size:16px; padding:12px 25px; width:100%;">⚡ RE-START SERVER AUTOMATIC GAME LOOP</button>
-    </div>
+    let myId = localStorage.getItem('player_id') || 'Player_' + Math.floor(1000 + Math.random() * 9000);
+    localStorage.setItem('player_id', myId);
+    let myCoins = 5000; 
+    let selectedSide = 'andar';
+    let betPlacedThisRound = false;
 
-    <!-- SYSTEM CHANGER CHEAT CODES -->
-    <div class="panel">
-        <h4 style="margin-top:0; color:#fbbf24;">🎯 Control Next Winner Strategy</h4>
-        <div style="display: flex; justify-content: space-between;">
-            <button id="ctrlAndar" class="admin-ctrl-btn" style="background:#22c55e; color:black;" onclick="applyRiggedTarget('andar')">ANDAR WIN</button>
-            <button id="ctrlBahar" class="admin-ctrl-btn" style="background:#3b82f6; color:white;" onclick="applyRiggedTarget('bahar')">BAHAR WIN</button>
-            <button id="ctrlAuto" class="admin-ctrl-btn ctrl-active" style="background:#64748b; color:white;" onclick="applyRiggedTarget('auto')">AUTO (RANDOM)</button>
-        </div>
-        <p id="ctrlMsg" style="font-size:12px; margin-top:10px; color:#fbbf24; font-weight:bold;">Status: Auto Random Mode Active</p>
-    </div>
-
-    <!-- LIVE PLAYER MONITOR & ADJUSTMENTS -->
-    <div class="panel">
-        <h3>👥 All Connected Database Players</h3>
-        <table>
-            <thead>
-                <tr><th>Player ID</th><th>Wallet Balance</th><th>Active Bet</th><th>Manual Actions</th></tr>
-            </thead>
-            <tbody id="playerLogs"></tbody>
-        </table>
-    </div>
-
-    <!-- METRICS WALLET SECTION -->
-    <div class="panel">
-        <h4 style="margin-top:0;">💰 Coins & UPI Payment Gateways</h4>
-        <input type="text" id="targetPlayer" placeholder="User_ID">
-        <input type="number" id="adminCoinInput" placeholder="Amount" style="width:100px;">
-        <button onclick="changeCoinsDirectly('add')" style="background:#22c55e; color:white;">+ Add</button>
-        <button onclick="changeCoinsDirectly('sub')" style="background:#ef4444; color:white;">- Deduct</button>
-        <hr style="border:0; border-top:1px solid #334155; margin:15px 0;">
-        <input type="text" id="newUPIInput" placeholder="New UPI Gateway ID" style="width:200px;">
-        <button onclick="setUPI()" style="background:#3b82f6; color:white;">Update UPI Node</button>
-    </div>
-
-    <h3>Pending Player Financial Requests</h3>
-    <div id="pendingList"></div>
-</div>
-
-<script>
-    // === APNE FIREBASE CREDENTIALS YAHAN BHI PASTE KAREIN ===
-    // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyAPRAHTuiVTxDWng6KzCTDZ3-70P2YSN98",
-  authDomain: "my-first-app-cad29.firebaseapp.com",
-  databaseURL: "https://my-first-app-cad29-default-rtdb.firebaseio.com",
-  projectId: "my-first-app-cad29",
-  storageBucket: "my-first-app-cad29.firebasestorage.app",
-  messagingSenderId: "899016030652",
-  appId: "1:899016030652:web:b7d3c0b1294b2db6f453b9",
-  measurementId: "G-7M1JKFC5R3"
-};
-    firebase.initializeApp(firebaseConfig);
-    const database = firebase.database();
-
-    const suits = ['♥', '♦', '♣', '♠'];
-    const ranks = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
-    let forcedWinner = 'auto';
-    let localPlayerRegistry = {};
-
-    // Sync metrics and compile live data lists
-    database.ref('players').on('value', snapshot => {
-        let players = snapshot.val();
-        localPlayerRegistry = players || {};
-        let html = '';
-        let poolAndar = 0, poolBahar = 0;
-
-        for(let uid in players) {
-            let p = players[uid];
-            let side = p.currentBet ? p.currentBet.side : 'none';
-            let amt = p.currentBet ? p.currentBet.amount : 0;
-            if(side === 'andar') poolAndar += amt;
-            if(side === 'bahar') poolBahar += amt;
-
-            html += `<tr>
-                <td><b>${p.id}</b></td>
-                <td>₹${p.coins}</td>
-                <td style="color:${side !== 'none' ? '#fbbf24' : '#fff'}">${side.toUpperCase()} (₹${amt})</td>
-                <td>
-                    <button onclick="document.getElementById('targetPlayer').value='${p.id}'" style="background:#64748b; color:white; font-size:11px; padding:2px 5px;">Select</button>
-                </td>
-            </tr>`;
+    const idDisplay = document.getElementById('displayId') || document.querySelector('[id*="ID"]') || document.body;
+    if (idDisplay) {
+        if(idDisplay.innerHTML.includes("Loading ID...")) {
+            idDisplay.innerHTML = idDisplay.innerHTML.replace("Loading ID...", myId);
+        } else {
+            idDisplay.innerText = "My Account ID: " + myId;
         }
-        document.getElementById('playerLogs').innerHTML = html;
-        document.getElementById('admAndarBet').innerText = '₹' + poolAndar;
-        document.getElementById('admBaharBet').innerText = '₹' + poolBahar;
+    }
+
+    onValue(ref(database, 'game'), (snapshot) => {
+        const game = snapshot.val();
+        if (!game) return;
+
+        let timeText = game.time !== undefined ? game.time + "s" : "0s";
+        const timeEl = document.getElementById('time') || document.querySelector('[id*="time"]');
+        if(timeEl) timeEl.innerText = timeText;
+
+        if (game.status === 'betting') {
+            betPlacedThisRound = false;
+            if(document.getElementById('placeBtn')) document.getElementById('placeBtn').disabled = false;
+            if(document.getElementById('result')) document.getElementById('result').innerText = 'Wait...';
+            if(document.getElementById('joker')) document.getElementById('joker').innerHTML = '';
+            if(document.getElementById('andar')) document.getElementById('andar').innerHTML = '';
+            if(document.getElementById('bahar')) document.getElementById('bahar').innerHTML = '';
+            if(document.getElementById('andarBox')) document.getElementById('andarBox').classList.remove('win');
+            if(document.getElementById('baharBox')) document.getElementById('baharBox').classList.remove('win');
+        } 
+        else if (game.status === 'dealing') {
+            if(document.getElementById('placeBtn')) document.getElementById('placeBtn').disabled = true;
+            if(document.getElementById('result')) document.getElementById('result').innerText = 'Dealing Cards...';
+            if(game.joker) buildJokerCard(game.joker);
+            renderCurrentCards(game.andarCards, game.baharCards);
+        } 
+        else if (game.status === 'finished') {
+            if(document.getElementById('placeBtn')) document.getElementById('placeBtn').disabled = true;
+            if(document.getElementById('result')) document.getElementById('result').innerText = `${game.winner.toUpperCase()} WINS!`;
+            if(document.getElementById('andarBox')) document.getElementById('andarBox').classList.toggle('win', game.winner === 'andar');
+            if(document.getElementById('baharBox')) document.getElementById('baharBox').classList.toggle('win', game.winner === 'bahar');
+        }
     });
 
-    // Real-time Ledger requests approval logic
-    database.ref('requests').on('value', snapshot => {
-        let reqs = snapshot.val();
-        let html = '';
-        for(let key in reqs) {
-            let r = reqs[key];
-            if(r.status === 'pending') {
-                html += `<div class="req-card">
-                    <div><b>[${r.type}]</b> ${r.userId} | Amount: <b>₹${r.amount}</b> <br> <small style="color:#94a3b8">Data: ${r.info}</small></div>
-                    <div>
-                        <button onclick="resolveTransaction('${key}', '${r.userId}', '${r.type}', ${r.amount}, 'approved')" style="background:#22c55e; color:black; margin-right:5px;">Approve</button>
-                        <button onclick="resolveTransaction('${key}', '${r.userId}', '${r.type}', ${r.amount}, 'rejected')" style="background:#ef4444; color:white;">Reject</button>
-                    </div>
-                </div>`;
-            }
+    function buildJokerCard(joker) {
+        let color = (joker.suit === '♥' || joker.suit === '♦') ? 'red' : 'black';
+        if(document.getElementById('joker')) {
+            document.getElementById('joker').innerHTML = `<div class="bigCard"><div class="${color}">${joker.rank}${joker.suit}</div><div style="font-size:40px; align-self:center; color:${color}">${joker.suit}</div><div class="${color}" style="text-align:right">${joker.rank}${joker.suit}</div></div>`;
         }
-        document.getElementById('pendingList').innerHTML = html || 'No tasks found.';
-    });
-
-    function applyRiggedTarget(side) {
-        forcedWinner = side;
-        document.getElementById('ctrlAndar').classList.toggle('ctrl-active', side === 'andar');
-        document.getElementById('ctrlBahar').classList.toggle('ctrl-active', side === 'bahar');
-        document.getElementById('ctrlAuto').classList.toggle('ctrl-active', side === 'auto');
-        document.getElementById('ctrlMsg').innerText = "Status: " + (side === 'auto' ? "Random Mode" : side.toUpperCase() + " Will Win");
     }
 
-    function changeCoinsDirectly(action) {
-        let uid = document.getElementById('targetPlayer').value;
-        let amt = parseInt(document.getElementById('adminCoinInput').value);
-        if(!localPlayerRegistry[uid] || isNaN(amt)) return alert("User verify karein!");
-
-        let currentCoins = localPlayerRegistry[uid].coins;
-        let newBal = action === 'add' ? currentCoins + amt : currentCoins - amt;
-        database.ref(`players/${uid}`).update({ coins: newBal });
-        alert("Wallet structure synchronized!");
-    }
-
-    function setUPI() {
-        let upi = document.getElementById('newUPIInput').value;
-        if(upi) { database.ref('system').update({ adminUPI: upi }); alert("UPI Updated!"); }
-    }
-
-    function resolveTransaction(key, uid, type, amt, decision) {
-        if(decision === 'approved' && type === 'Deposit') {
-            database.ref(`players/${uid}/coins`).transaction(c => (c || 0) + amt);
+    function renderCurrentCards(andar, bahar) {
+        if(andar && document.getElementById('andar')) {
+            document.getElementById('andar').innerHTML = Object.values(andar).map(c => {
+                let color = (c.suit === '♥' || c.suit === '♦') ? 'red' : 'black';
+                return `<div class="card"><span class="${color}">${c.rank}${c.suit}</span><span class="${color}" style="font-size:18px; text-align:center">${c.suit}</span></div>`;
+            }).join('');
         }
-        if(decision === 'rejected' && type === 'Withdrawal') {
-            database.ref(`players/${uid}/coins`).transaction(c => (c || 0) + amt); // Return coins
+        if(bahar && document.getElementById('bahar')) {
+            document.getElementById('bahar').innerHTML = Object.values(bahar).map(c => {
+                let color = (c.suit === '♥' || c.suit === '♦') ? 'red' : 'black';
+                return `<div class="card"><span class="${color}">${c.rank}${c.suit}</span><span class="${color}" style="font-size:18px; text-align:center">${c.suit}</span></div>`;
+            }).join('');
         }
-        database.ref(`requests/${key}`).update({ status: decision });
     }
 
-    // === RE-DESIGNED AUTOMATED GAME LOOPS ENGINE ===
-    function activateAutomationEngine() {
-        alert("Server Engine Initialized Successfully!");
-        processCycle();
+    window.selectSide = function(side) {
+        selectedSide = side;
+        if(document.getElementById('andarBtn')) document.getElementById('andarBtn').className = (side === 'andar' ? 'btn-bet activeBtn' : 'btn-bet');
+        if(document.getElementById('baharBtn')) document.getElementById('baharBtn').className = (side === 'bahar' ? 'btn-bet activeBtn' : 'btn-bet');
     }
 
-    function processCycle() {
-        // Clean out active bets for fresh turn state
-        database.ref('gameState').set({ status: 'betting', timeLeft: 10 });
-        for(let id in localPlayerRegistry) {
-            database.ref(`players/${id}/currentBet`).set({ side: 'none', amount: 0 });
-        }
+    window.placeBet = function() {
+        if(betPlacedThisRound) return alert("Is round me bet lag chuki hai!");
+        let amt = parseInt(document.getElementById('amount').value);
+        if (amt <= 0 || isNaN(amt) || amt > myCoins) return alert("Invalid amount or balance!");
 
-        let clock = 10;
-        let timer = setInterval(() => {
-            clock--;
-            database.ref('gameState/timeLeft').set(clock);
-            document.getElementById('loopTime').innerText = clock;
-            if(clock <= 0) {
-                clearInterval(timer);
-                triggerDealingSequence();
-            }
-        }, 1000);
+        betPlacedThisRound = true;
+        update(ref(database, 'players/' + myId), {
+            coins: myCoins - amt,
+            currentBet: { side: selectedSide, amount: amt }
+        });
+        alert("Bet Placed!");
     }
 
-    function triggerDealingSequence() {
-        database.ref('gameState/status').set('dealing');
+    window.requestDeposit = function() {
+        let amt = document.getElementById('userDepAmt').value;
+        let utr = document.getElementById('userUTR').value;
+        if(!amt || utr.length < 5) return alert("Details bhariye!");
+        push(ref(database, 'requests'), { id: Date.now(), userId: myId, type: 'Deposit', amount: amt, info: utr, status: 'pending' });
+        alert("Request sent!");
+        document.getElementById('userDepAmt').value = ''; document.getElementById('userUTR').value = '';
+    }
+
+    window.requestWithdrawal = function() {
+        let amt = parseInt(document.getElementById('userWithAmt').value);
+        let upi = document.getElementById('userUPI').value;
+        if(!amt || upi.length < 5 || amt > myCoins) return alert("Low balance!");
         
-        let deck = [];
-        for (let s of suits) for (let r of ranks) deck.push({ rank: r, suit: s });
-        deck = deck.sort(() => Math.random() - 0.5);
-        let joker = deck.shift();
-        database.ref('gameState/joker').set(joker);
-
-        let andarCards = [], baharCards = [];
-        let index = 0;
-        let winner = '';
-
-        let dealEngine = setInterval(() => {
-            let card;
-            if (forcedWinner === 'andar' && index >= 4) card = { rank: joker.rank, suit: suits[0] };
-            else if (forcedWinner === 'bahar' && index >= 5) card = { rank: joker.rank, suit: suits[0] };
-            else {
-                card = deck.shift();
-                if(forcedWinner !== 'auto' && card.rank === joker.rank) { deck.push(card); card = deck.shift(); }
-            }
-
-            if(index % 2 === 0) {
-                andarCards.push(card);
-                database.ref('gameState/andarCards').set(andarCards);
-                if(card.rank === joker.rank) { winner = 'andar'; clearInterval(dealEngine); wrapUpRound(winner); }
-            } else {
-                baharCards.push(card);
-                database.ref('gameState/baharCards').set(baharCards);
-                if(card.rank === joker.rank) { winner = 'bahar'; clearInterval(dealEngine); wrapUpRound(winner); }
-            }
-            index++;
-        }, 1000);
+        update(ref(database, 'players/' + myId), { coins: myCoins - amt });
+        push(ref(database, 'requests'), { id: Date.now(), userId: myId, type: 'Withdrawal', amount: amt, info: upi, status: 'pending' });
+        alert("Withdrawal sent!");
+        document.getElementById('userWithAmt').value = ''; document.getElementById('userUPI').value = '';
     }
 
-    function wrapUpRound(winner) {
-        database.ref('gameState').update({ status: 'finished', winner: winner });
-        database.ref('system/history').push(winner === 'andar' ? 'A' : 'B');
-
-        // Payout Calculation
-        for(let uid in localPlayerRegistry) {
-            let user = localPlayerRegistry[uid];
-            if(user.currentBet && user.currentBet.side === winner) {
-                let prize = user.currentBet.amount * 2;
-                database.ref(`players/${uid}/coins`).set(user.coins + prize);
-            }
-        }
-
-        setTimeout(() => {
-            applyRiggedTarget('auto'); // Reset hack to normal state
-            processCycle();
-        }, 5000);
-    }
-</script>
-</body>
-  </html>
+    window.quick = function(val) { document.getElementById('amount').value = (parseInt(document.getElementById('amount').value) || 0) + val; }
+    window.doubleBet = function() { document.getElementById('amount').value = (parseInt(document.getElementById('amount').value) || 0) * 2; }
+    
+    window.selectSide('andar');
+        </script>

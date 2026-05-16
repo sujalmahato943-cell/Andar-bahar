@@ -1,9 +1,7 @@
 <script type="module">
-    // Naya Firebase SDK Version jo Termux se connect hoga
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getDatabase, ref, onValue, update, push } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-    // Aapka 100% Asli Firebase Credentials
     const firebaseConfig = {
         apiKey: "AIzaSyAPRAHTuiVTxDwng6KzCTDZ3-70P2YSN98",
         authDomain: "my-first-app-cad29.firebaseapp.com",
@@ -18,14 +16,12 @@
     const app = initializeApp(firebaseConfig);
     const database = getDatabase(app);
 
-    // Player ID aur Coins Setup (Taki Loading ID... hat jaye)
     let myId = localStorage.getItem('player_id') || 'Player_' + Math.floor(1000 + Math.random() * 9000);
     localStorage.setItem('player_id', myId);
-    let myCoins = 5000; // Default Coins
+    let myCoins = 5000; 
     let selectedSide = 'andar';
     let betPlacedThisRound = false;
 
-    // UI par Player ID aur Coins dikhana
     const idDisplay = document.getElementById('displayId') || document.querySelector('[id*="ID"]') || document.body;
     if (idDisplay) {
         if(idDisplay.innerHTML.includes("Loading ID...")) {
@@ -35,31 +31,23 @@
         }
     }
 
-    // Termux se automatic data lekar screen par dikhana
     onValue(ref(database, 'game'), (snapshot) => {
         const game = snapshot.val();
         if (!game) return;
 
-        // Timer Update
         let timeText = game.time !== undefined ? game.time + "s" : "0s";
         const timeEl = document.getElementById('time') || document.querySelector('[id*="time"]');
         if(timeEl) timeEl.innerText = timeText;
 
-        // Status ke mutabik game chalana
         if (game.status === 'betting') {
             betPlacedThisRound = false;
-            const placeBtn = document.getElementById('placeBtn');
-            if(placeBtn) placeBtn.disabled = false;
-            
-            const resEl = document.getElementById('result');
-            if(resEl) resEl.innerText = 'Wait...';
-            
+            if(document.getElementById('placeBtn')) document.getElementById('placeBtn').disabled = false;
+            if(document.getElementById('result')) document.getElementById('result').innerText = 'Wait...';
             if(document.getElementById('joker')) document.getElementById('joker').innerHTML = '';
             if(document.getElementById('andar')) document.getElementById('andar').innerHTML = '';
             if(document.getElementById('bahar')) document.getElementById('bahar').innerHTML = '';
             if(document.getElementById('andarBox')) document.getElementById('andarBox').classList.remove('win');
             if(document.getElementById('baharBox')) document.getElementById('baharBox').classList.remove('win');
-            if(!betPlacedThisRound && document.getElementById('betMsg')) document.getElementById('betMsg').innerText = '';
         } 
         else if (game.status === 'dealing') {
             if(document.getElementById('placeBtn')) document.getElementById('placeBtn').disabled = true;
@@ -97,7 +85,6 @@
         }
     }
 
-    // Buttons functions ko window scope me lana taaki HTML unhe click kar sake
     window.selectSide = function(side) {
         selectedSide = side;
         if(document.getElementById('andarBtn')) document.getElementById('andarBtn').className = (side === 'andar' ? 'btn-bet activeBtn' : 'btn-bet');
@@ -142,8 +129,3 @@
     
     window.selectSide('andar');
 </script>
-</body>
-</html>
-</script>
-</body>
-</html>

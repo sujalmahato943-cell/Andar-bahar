@@ -13,17 +13,57 @@
         .status-text { font-size: 18px; color: #38bdf8; font-weight: bold; margin: 5px 0; }
         .badge { background: #10b981; padding: 5px 10px; border-radius: 5px; font-size: 14px; font-weight: bold; }
         .req-list { text-align: left; background: #0f172a; padding: 12px; border-radius: 6px; font-size: 14px; margin-top: 10px; border-left: 4px solid #f59e0b; }
+        
+        /* New Bets Table Styles */
+        .bet-summary { display: flex; justify-content: space-around; margin: 10px 0; padding: 10px; background: #0f172a; border-radius: 6px; }
+        .bet-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; text-align: left; }
+        .bet-table th, .bet-table td { padding: 8px; border-bottom: 1px solid #334155; }
+        .bet-table th { background: #334155; color: #38bdf8; }
+        .side-andar { color: #ef4444; font-weight: bold; }
+        .side-bahar { color: #3b82f6; font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <h1>🔮 ALL-IN-ONE MASTER CONTROL</h1>
+    <h1>🔮 MASTER CONTROL PANEL PRO</h1>
     <p>Termux Server Status: <span class="badge">ONLINE & RUNNING</span></p>
 
     <div class="box">
         <h3>Live Game Monitoring</h3>
         <div class="status-text">Status: <span id="liveStatus">Loading...</span></div>
         <div class="status-text">Time Left: <span id="liveTime">0s</span></div>
+    </div>
+
+    <div class="box" style="border-color: #eab308;">
+        <h3>📊 Live Bets Monitor (Current Round)</h3>
+        <div class="bet-summary">
+            <div>Total ANDAR: <span id="totalAndarBet" style="color:#ef4444; font-size:18px; font-weight:bold;">0</span></div>
+            <div>Total BAHAR: <span id="totalBaharBet" style="color:#3b82f6; font-size:18px; font-weight:bold;">0</span></div>
+        </div>
+        <div style="max-height: 150px; overflow-y: auto;">
+            <table class="bet-table">
+                <thead>
+                    <tr>
+                        <th>Player ID</th>
+                        <th>Side</th>
+                        <th>Amount</th>
+                    </tr>
+                </thead>
+                <tbody id="betsTableBody">
+                    <tr>
+                        <td colspan="3" style="text-align:center; color:#64748b;">No active bets in this round</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="box">
+        <h3>🎯 Game Controller (Hack Mode)</h3>
+        <p style="color: #94a3b8; font-size: 14px;">Aap upar live bets dekh kar winner fix kar sakte hain:</p>
+        <button class="btn" style="background:#ef4444;" onclick="setWinner('andar')">Force Win: ANDAR 🔴</button>
+        <button class="btn" style="background:#2563eb;" onclick="setWinner('bahar')">Force Win: BAHAR 🔵</button>
+        <button class="btn" style="background:#64748b; width:93%;" onclick="setWinner('auto')">Reset to Automatic (Normal Mode)</button>
     </div>
 
     <div class="box">
@@ -36,14 +76,6 @@
         <br>
         <button onclick="updateCoins('add')" class="btn" style="background:#10b981;">➕ Add Coins</button>
         <button onclick="updateCoins('sub')" class="btn" style="background:#ef4444;">➖ Remove Coins</button>
-    </div>
-
-    <div class="box">
-        <h3>🎯 Game Controller (Hack Mode)</h3>
-        <p style="color: #94a3b8; font-size: 14px;">Aap yahan se agla round fix kar sakte hain:</p>
-        <button class="btn" style="background:#ef4444;" onclick="setWinner('andar')">Force Win: ANDAR 🔴</button>
-        <button class="btn" style="background:#2563eb;" onclick="setWinner('bahar')">Force Win: BAHAR 🔵</button>
-        <button class="btn" style="background:#64748b; width:93%;" onclick="setWinner('auto')">Reset to Automatic (Normal Mode)</button>
     </div>
 
     <div class="box">
@@ -76,6 +108,45 @@
             if (data) {
                 document.getElementById('liveStatus').innerText = data.status.toUpperCase();
                 document.getElementById('liveTime').innerText = data.time + "s";
+            }
+        });
+
+        // 🔥 LIVE BETS TRACKING LOGIC
+        onValue(ref(database, 'players'), (snapshot) => {
+            if (snapshot.exists()) {
+                let totalAndar = 0;
+                let totalBahar = 0;
+                let tableHtml = "";
+                let playersData = snapshot.val();
+
+                Object.entries(playersData).forEach(([uid, player]) => {
+                    if (player.currentBet) {
+                        let side = player.currentBet.side;
+                        let amount = parseInt(player.currentBet.amount) || 0;
+
+                        if (side === 'andar') {
+                            totalAndar += amount;
+                        } else if (side === 'bahar') {
+                            totalBahar += amount;
+                        }
+
+                        let sideClass = side === 'andar' ? 'side-andar' : 'side-bahar';
+                        tableHtml += `<tr>
+                            <td>${uid}</td>
+                            <td class="${sideClass}">${side.toUpperCase()}</td>
+                            <td>${amount} Coins</td>
+                        </tr>`;
+                    }
+                });
+
+                document.getElementById('totalAndarBet').innerText = totalAndar;
+                document.getElementById('totalBaharBet').innerText = totalBahar;
+                
+                if(tableHtml !== "") {
+                    document.getElementById('betsTableBody').innerHTML = tableHtml;
+                } else {
+                    document.getElementById('betsTableBody').innerHTML = `<tr><td colspan="3" style="text-align:center; color:#64748b;">No active bets in this round</td></tr>`;
+                }
             }
         });
 

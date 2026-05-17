@@ -3,62 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Andar Bahar Game</title>
+    <title>Andar Bahar Live Club</title>
     <style>
         body {
-            background-color: #0d1b2a;
+            background-color: #0b132b;
             color: white;
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 10px;
             text-align: center;
+            -webkit-user-select: none;
+            user-select: none;
         }
         .container {
-            max-width: 500px;
+            max-width: 480px;
             margin: 0 auto;
-            background: #1b263b;
+            background: #1c2541;
             padding: 15px;
-            border-radius: 15px;
-            box-shadow: 0px 4px 15px rgba(0,0,0,0.5);
+            border-radius: 20px;
+            box-shadow: 0px 10px 30px rgba(0,0,0,0.7);
+            border: 1px solid #3a506b;
         }
         .header-box {
-            background: #415a77;
-            padding: 10px;
-            border-radius: 10px;
+            background: #222e50;
+            padding: 12px;
+            border-radius: 15px;
             margin-bottom: 15px;
+            border: 1px solid #3a506b;
         }
-        .accent-text { color: #ffcc00; font-weight: bold; }
-        .coins-text { color: #00ffcc; font-weight: bold; }
-        .time-text { color: #ff3333; font-weight: bold; }
+        .accent-text { color: #ffbc00; font-weight: bold; }
+        .coins-text { color: #00f5d4; font-weight: bold; }
+        .time-text { color: #ff5c5c; font-weight: bold; font-size: 16px; }
         
-        /* Main Joker Card Styling */
-        .joker-area { margin: 20px 0; }
+        /* Card Layouts */
+        .joker-area { margin: 15px 0; min-height: 170px; }
         .card {
             display: inline-block;
-            width: 90px;
-            height: 130px;
-            background: white;
-            color: black;
-            border-radius: 8px;
-            padding: 5px;
+            width: 85px;
+            height: 125px;
+            background: #ffffff;
+            color: #000000;
+            border-radius: 10px;
+            padding: 8px;
             box-sizing: border-box;
             position: relative;
             font-weight: bold;
             font-size: 20px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.4);
             margin: 5px;
+            transition: transform 0.2s;
         }
-        .card.red { color: #d90429; }
-        .card.black { color: #2b2d42; }
+        .card.red { color: #e63946; }
+        .card.black { color: #1d3557; }
         .card .suit-center {
-            font-size: 32px;
+            font-size: 34px;
             position: absolute;
-            top: 50%;
+            top: 55%;
             left: 50%;
             transform: translate(-50%, -50%);
         }
 
-        /* Game Board layout */
+        /* Betting Grid */
         .board {
             display: flex;
             justify-content: space-between;
@@ -66,11 +71,12 @@
         }
         .side-box {
             width: 48%;
-            background: #22333b;
+            background: #0b132b;
             padding: 10px;
-            border-radius: 10px;
+            border-radius: 12px;
             min-height: 180px;
-            border: 1px solid #415a77;
+            border: 1px solid #3a506b;
+            box-sizing: border-box;
         }
         .card-container {
             display: flex;
@@ -80,84 +86,88 @@
             margin-top: 10px;
         }
 
-        /* Betting & Controls */
+        /* Custom Action Buttons */
         .btn-bet {
             background: #007bff;
             color: white;
             border: none;
-            padding: 12px 25px;
-            font-size: 16px;
+            padding: 12px;
+            font-size: 15px;
             font-weight: bold;
-            border-radius: 8px;
+            border-radius: 10px;
             cursor: pointer;
             margin: 5px;
-            width: 40%;
+            width: 44%;
+            transition: 0.2s;
+            text-transform: uppercase;
         }
         .btn-bet.activeBtn {
-            background: #28a745;
-            box-shadow: 0 0 10px #28a745;
+            background: #00b4d8;
+            box-shadow: 0 0 15px #00b4d8;
         }
         .input-amt {
             width: 60%;
             padding: 10px;
             font-size: 16px;
-            border-radius: 5px;
-            border: none;
+            border-radius: 8px;
+            border: 2px solid #3a506b;
+            background: #0b132b;
+            color: white;
             text-align: center;
             margin-top: 10px;
         }
         .btn-submit {
-            background: #ffc107;
-            color: black;
+            width: 92%;
+            background: #ffb703;
+            color: #023047;
             border: none;
-            padding: 10px 20px;
+            padding: 12px;
             font-weight: bold;
-            border-radius: 5px;
+            font-size: 16px;
+            border-radius: 10px;
             cursor: pointer;
-            margin-top: 10px;
+            margin-top: 12px;
+            box-shadow: 0 4px 10px rgba(255,183,3,0.3);
         }
 
-        /* History & Tags */
-        .history-section {
-            background: #0d1b2a;
+        /* Dynamic Realtime History Section */
+        .history-box {
+            background: #0b132b;
             padding: 8px;
             border-radius: 8px;
-            margin-bottom: 10px;
+            margin-top: 5px;
             display: flex;
             justify-content: center;
             align-items: center;
-            flex-wrap: wrap;
-            gap: 8px;
+            gap: 6px;
+            min-height: 35px;
         }
         .history-item {
-            padding: 4px 8px;
-            border-radius: 4px;
+            padding: 3px 8px;
+            border-radius: 5px;
             font-weight: bold;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
+            font-size: 13px;
         }
-        .blue-badge { background: #0056b3; color: white; }
-        .gold-badge { background: #d4af37; color: black; }
+        .blue-badge { background: #2563eb; color: white; }
+        .gold-badge { background: #d97706; color: white; }
         .new-tag {
-            background-color: #ff007f;
+            background-color: #ff0055;
             color: white;
             font-size: 9px;
             padding: 1px 4px;
             border-radius: 3px;
-            margin-left: 5px;
-            font-weight: bold;
-            animation: blinker 1s linear infinite;
+            margin-left: 4px;
+            animation: flash 0.8s linear infinite;
         }
-        @keyframes blinker { 50% { opacity: 0; } }
+        @keyframes flash { 50% { opacity: 0; } }
 
-        /* Payment Section */
-        .upi-container {
-            background: #152238;
-            padding: 15px;
-            border-radius: 10px;
+        /* Gateways integration */
+        .upi-box {
+            background: #111c3a;
+            padding: 12px;
+            border-radius: 12px;
             margin-top: 20px;
-            border: 1px solid #2a3f5f;
+            border: 1px dashed #3a506b;
             text-align: left;
         }
     </style>
@@ -166,205 +176,162 @@
 
 <div class="container">
     <div class="header-box">
-        <div>Account ID: <span class="accent-text" id="accId">User-1593</span></div>
-        <div style="font-size: 13px; margin-top: 4px;">
-            Last Winners: <span id="historyBox" class="history-section">Waiting...</span>
+        <div>Account ID: <span class="accent-text">User-1593</span></div>
+        <div style="font-size: 13px; margin-top: 5px; color:#a5b4fc;">
+            Last Winners: 
+            <div id="historyContainer" class="history-box">Waiting for server...</div>
         </div>
-        <hr style="border: 0.5px solid #555;">
-        <div style="display: flex; justify-content: space-around; font-size: 15px;">
+        <hr style="border:0; border-top:1px solid #3a506b; margin:10px 0;">
+        <div style="display: flex; justify-content: space-around; font-size: 14px;">
             <div>Coins: <span class="coins-text" id="topCoins">600</span></div>
             <div>Your Bet: <span class="accent-text" id="betDisplay">0</span></div>
-            <div>Time: <span class="time-text" id="timer">10s</span></div>
+            <div>Time: <span class="time-text" id="timer">--</span></div>
         </div>
     </div>
 
-    <div id="confirmMsg" style="color: #00ffcc; font-weight: bold; margin-bottom: 5px; min-height: 18px;"></div>
+    <div id="confirmMsg" style="color: #00f5d4; font-weight: bold; margin-bottom: 8px; min-height: 18px; font-size:13px;"></div>
 
     <div class="joker-area">
-        <div id="jokerCardDisplay">
-            <div class="card black"><span class="suit">4&spades;</span><div class="suit-center">&spades;</div></div>
+        <div id="jokerPlaceholder">
+            <div class="card black" style="opacity:0.3;"><span>?</span><div class="suit-center">?</div></div>
         </div>
-        <h3 id="gameStatus" style="color: #ffcc00; margin: 5px 0;">Dealing Cards...</h3>
+        <h3 id="gameStatus" style="color: #ffbc00; margin: 8px 0; font-size:18px;">Connecting Server...</h3>
     </div>
 
     <div class="board">
         <div class="side-box">
-            <h4 style="margin:0; color:#007bff;">ANDAR</h4>
+            <h4 style="margin:0; color:#3b82f6; font-size:15px; letter-spacing:1px;">ANDAR</h4>
             <div class="card-container" id="andarCards"></div>
         </div>
         <div class="side-box">
-            <h4 style="margin:0; color:#ffcc00;">BAHAR</h4>
+            <h4 style="margin:0; color:#eab308; font-size:15px; letter-spacing:1px;">BAHAR</h4>
             <div class="card-container" id="baharCards"></div>
         </div>
     </div>
 
     <div>
-        <button id="andarBtn" class="btn-bet" onclick="selectSide('andar')">ANDAR</button>
+        <button id="andarBtn" class="btn-bet activeBtn" onclick="selectSide('andar')">ANDAR</button>
         <button id="baharBtn" class="btn-bet" onclick="selectSide('bahar')">BAHAR</button>
         <br>
-        <input type="number" id="amount" class="input-amt" value="200" min="10">
+        <input type="number" id="amount" class="input-amt" value="200">
         <br>
         <button class="btn-submit" onclick="placeBet()">PLACE BET</button>
     </div>
 
-    <div class="upi-container">
-        <h3 style="color: #ffcc00; margin-top: 0; font-size: 15px; text-align: center;">👇 Coin Add Karne Ke Liye Payment Karein 👇</h3>
-        <div style="text-align: center; margin-bottom: 10px;">
-            <p style="margin: 5px 0; font-size: 14px;"><strong>Our UPI ID:</strong> <span id="upiIdText" style="color: #00ffcc; font-weight: bold;">admin@upi</span></p>
-            <button onclick="copyUPI()" style="background: #007bff; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;">Copy UPI ID</button>
+    <div class="upi-box">
+        <h4 style="color: #ffbc00; margin: 0 0 8px 0; font-size: 14px; text-align: center;">💳 INSTANT AUTO COIN DEPOSIT VIA UPI</h4>
+        <div style="text-align: center; margin-bottom: 8px;">
+            <span style="font-size: 13px;">UPI ID: <strong id="upiIdText" style="color:#00f5d4;">admin@upi</strong></span>
+            <button onclick="copyUPI()" style="background:#3b82f6; color:white; border:none; padding:3px 8px; border-radius:4px; font-size:11px; margin-left:6px; cursor:pointer;">Copy</button>
         </div>
-        <div style="text-align: center; font-size: 11px; color: #bbb; margin-bottom: 12px;">
-            📢 Payment karne ke baad niche Amount aur UTR No. dalkar submit karein.
-        </div>
-
-        <label style="font-size:12px;">Deposit Amount:</label>
-        <input type="number" id="depAmt" placeholder="Enter Amount" style="width:90%; padding:6px; margin:5px 0; border-radius:4px; border:none;"><br>
-        <label style="font-size:12px;">UTR / Reference No:</label>
-        <input type="text" id="depUtr" placeholder="Enter 12 Digit UTR" style="width:90%; padding:6px; margin:5px 0; border-radius:4px; border:none;">
-        <button onclick="sendDeposit()" style="width:100%; background:#28a745; color:white; border:none; padding:8px; font-weight:bold; border-radius:4px; cursor:pointer; margin-top:5px;">Submit Request</button>
+        
+        <input type="number" id="depAmt" placeholder="Coins Amount" style="width:94%; padding:6px; margin:4px 0; background:#0b132b; color:white; border:1px solid #3a506b; border-radius:5px;">
+        <input type="text" id="depUtr" placeholder="12-Digit UTR / Ref No" style="width:94%; padding:6px; margin:4px 0; background:#0b132b; color:white; border:1px solid #3a506b; border-radius:5px;">
+        <button onclick="sendDeposit()" style="width:100%; background:#22c55e; color:white; border:none; padding:8px; font-weight:bold; border-radius:5px; cursor:pointer; margin-top:5px;">SUBMIT DEPOSIT REQUEST</button>
     </div>
 </div>
 
 <script type="module">
-    // Mock Firebase imports/references mapping to your current setup
-    // Aapke code mein firebase initialization pehle se tha use rehne dena agar koi issue ho.
-    import { ref, update, push, onValue } from "https://www.gstatic.com/firebasejs/9.x.x/firebase-database.js"; 
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.x.x/firebase-app.js";
+    import { getDatabase, ref, set, update, onValue, push } from "https://www.gstatic.com/firebasejs/9.x.x/firebase-database.js";
 
-    // Game Variables
+    const firebaseConfig = {
+        databaseURL: "https://andar-bahar-b7443-default-rtdb.firebaseio.com"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const database = getDatabase(app);
+
     let myId = "User-1593";
     let myCoins = 600;
-    let selectedSide = 'andar';
+    let selectedSide = "andar";
     let betPlacedThisRound = false;
-    let database; // Aapka Firebase DB reference yahan auto connect hoga
 
-    // Card Management System
-    const suits = ['&spades;', '&diams;', '&hearts;', '&clubs;'];
-    const ranks = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
-    let deck = [];
-    let jokerCard = { rank: '5', suit: '&spades;' }; // Example Starting Joker (5)
-    let currentTurn = 'andar';
-    let gameInterval = null;
+    // 1. Realtime Listen to User Profile Data Stream
+    onValue(ref(database, 'players/' + myId), (snapshot) => {
+        if(snapshot.exists()) {
+            myCoins = snapshot.val().coins || 0;
+            document.getElementById('topCoins').innerText = myCoins;
+        }
+    });
 
-    // --- GAME ENGINE LOGIC ---
-    function createDeck() {
-        deck = [];
-        for (let suit of suits) {
-            for (let rank of ranks) {
-                let color = (suit === '&diams;' || suit === '&hearts;') ? 'red' : 'black';
-                deck.push({ rank, suit, color });
+    // 2. Realtime Listen to Server Engine Loops (YAHI WAITING HATAEGA)
+    onValue(ref(database, 'game'), (snapshot) => {
+        if(snapshot.exists()) {
+            const gameData = snapshot.val();
+            
+            // Handle Countdown Display
+            if(gameData.status === "betting") {
+                document.getElementById('timer').innerText = gameData.time + "s";
+                document.getElementById('gameStatus').innerText = "Place Your Bets Now!";
+                // Clear obsolete boards elements
+                document.getElementById('andarCards').innerHTML = '';
+                document.getElementById('baharCards').innerHTML = '';
+                document.getElementById('jokerPlaceholder').innerHTML = `<div class="card black" style="opacity:0.3;"><span>?</span><div class="suit-center">?</div></div>`;
+            } else {
+                document.getElementById('timer').innerText = "0s";
+            }
+
+            // Handle Realtime Joker Cards Generation
+            if(gameData.joker) {
+                let j = gameData.joker;
+                let colorClass = (j.suit === '♦' || j.suit === '♥') ? 'red' : 'black';
+                document.getElementById('jokerPlaceholder').innerHTML = `
+                    <div class="card ${colorClass}">
+                        <span>${j.rank}${j.suit}</span>
+                        <div class="suit-center">${j.suit}</div>
+                    </div>`;
+            }
+
+            // Handle Stream Cards Flow State
+            if(gameData.status === "dealing") {
+                document.getElementById('gameStatus').innerText = "Dealing Cards Live...";
+            }
+
+            // Handle Render Stream Packs
+            renderCardStack('andarCards', gameData.andarCards);
+            renderCardStack('baharCards', gameData.baharCards);
+
+            // Handle Final Round Complete Trigger
+            if(gameData.status === "ended") {
+                document.getElementById('gameStatus').innerText = `${gameData.winner.toUpperCase()} WINS! 🎉`;
+                betPlacedThisRound = false; 
+                document.getElementById('betDisplay').innerText = "0";
+                document.getElementById('confirmMsg').innerText = "";
+            }
+
+            // Render Smart Realtime History List with 'NEW' Tag
+            if(gameData.historyList) {
+                let hHtml = "";
+                let list = Object.values(gameData.historyList);
+                list.forEach((win, index) => {
+                    let isRecent = (index === list.length - 1);
+                    let badge = (win === 'andar') ? 'blue-badge' : 'gold-badge';
+                    let tag = isRecent ? '<span class="new-tag">NEW</span>' : '';
+                    hHtml += `<div class="history-item ${badge}">${win.substring(0,1).toUpperCase()}${tag}</div>`;
+                });
+                document.getElementById('historyContainer').innerHTML = hHtml;
             }
         }
-    }
+    });
 
-    function shuffleDeck() {
-        for (let i = deck.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [deck[i], deck[j]] = [deck[j], deck[i]];
-        }
-    }
-
-    // Naya round start karne ka system
-    window.startNewRound = function() {
-        createDeck();
-        shuffleDeck();
+    // Subroutine Render Packs Utility
+    function renderCardStack(elementId, cardArray) {
+        let container = document.getElementById(elementId);
+        container.innerHTML = "";
+        if(!cardArray) return;
         
-        // Ek random joker channa
-        jokerCard = deck.pop();
-        renderJoker();
-        
-        // Reset boards
-        document.getElementById('andarCards').innerHTML = '';
-        document.getElementById('baharCards').innerHTML = '';
-        document.getElementById('gameStatus').innerText = "Dealing Cards...";
-        
-        currentTurn = 'andar'; // Game hamesha Andar se shuru hoga
-        
-        // Start 1-by-1 alternate card system
-        if(gameInterval) clearInterval(gameInterval);
-        gameInterval = setInterval(dealSingleCard, 1000); // Har 1 second me 1 card khulega
-    }
-
-    function renderJoker() {
-        document.getElementById('jokerCardDisplay').innerHTML = `
-            <div class="card ${jokerCard.color}">
-                <span>${jokerCard.rank}${jokerCard.suit}</span>
-                <div class="suit-center">${jokerCard.suit}</div>
-            </div>`;
-    }
-
-    // 1-by-1 Card deal karne ka logic (Bari-Bari system)
-    function dealSingleCard() {
-        if (deck.length === 0) {
-            clearInterval(gameInterval);
-            alert("Deck empty! Round Draw.");
-            resetBetUI();
-            return;
-        }
-
-        let dealtCard = deck.pop();
-        let cardHTML = `<div class="card ${dealtCard.color}"><span>${dealtCard.rank}${dealtCard.suit}</span><div class="suit-center" style="font-size:14px;">${dealtCard.suit}</div></div>`;
-
-        if (currentTurn === 'andar') {
-            document.getElementById('andarCards').innerHTML += cardHTML;
-            
-            // STRICT JOKER MATCH: Sirf rank barabar hone par hi jeet hogi
-            if (dealtCard.rank === jokerCard.rank) {
-                clearInterval(gameInterval);
-                declareWinner('andar');
-                return;
-            }
-            currentTurn = 'bahar'; // agla card bahar jayega
-        } else {
-            document.getElementById('baharCards').innerHTML += cardHTML;
-            
-            if (dealtCard.rank === jokerCard.rank) {
-                clearInterval(gameInterval);
-                declareWinner('bahar');
-                return;
-            }
-            currentTurn = 'andar'; // agla card andar jayega
-        }
-    }
-
-    // Winner update function with REALTIME NEW Tag
-    function declareWinner(winner) {
-        document.getElementById('gameStatus').innerText = `${winner.toUpperCase()} WINS! 🎉`;
-        
-        // Realtime dummy array handle karne ya Firebase se manage karne ke liye simulation
-        // Aapki requirement ke mutabik recent win ko 'NEW' tag milega
-        let dummyHistory = ['andar', 'bahar', winner]; 
-        updateHistoryUI(dummyHistory);
-        
-        // Game khatam hone ke baad hi Bet options reset honge
-        setTimeout(() => {
-            resetBetUI();
-            startNewRound(); // Next round auto-trigger
-        }, 4000);
-    }
-
-    // --- SMART RECENT HISTORY LOGIC ---
-    function updateHistoryUI(winnerList) {
-        let historyContainer = document.getElementById('historyBox');
-        historyContainer.innerHTML = ''; 
-
-        winnerList.forEach((win, index) => {
-            let isRecent = (index === winnerList.length - 1); // Sabse aakhri jo abhi aaya h
-            let tagHTML = isRecent ? '<span class="new-tag">NEW</span>' : '';
-            
-            let sideChar = win === 'andar' ? 'A' : 'B';
-            let badgeColor = win === 'andar' ? 'blue-badge' : 'gold-badge';
-            
-            historyContainer.innerHTML += `<div class="history-item ${badgeColor}">${sideChar} ${tagHTML}</div>`;
+        Object.values(cardArray).forEach(card => {
+            let colorClass = (card.suit === '♦' || card.suit === '♥') ? 'red' : 'black';
+            container.innerHTML += `
+                <div class="card ${colorClass}">
+                    <span>${card.rank}${card.suit}</span>
+                    <div class="suit-center" style="font-size:14px;">${card.suit}</div>
+                </div>`;
         });
     }
 
-    function resetBetUI() {
-        betPlacedThisRound = false;
-        document.getElementById('betDisplay').innerText = "0";
-        document.getElementById('confirmMsg').innerText = "";
-    }
-
-    // --- AAPKA PASTE KIYA HUA CODE (BETTING & DEPOSIT LOGIC - MODIFIED & CORRECTED) ---
+    // Interactive Core Triggers Layout Mapping
     window.selectSide = function(side) {
         selectedSide = side;
         document.getElementById('andarBtn').className = (side === 'andar' ? 'btn-bet activeBtn' : 'btn-bet');
@@ -372,15 +339,14 @@
     }
 
     window.placeBet = function() {
-        if(betPlacedThisRound) return alert("Bet already placed!");
+        if(betPlacedThisRound) return alert("Bet already placed this round!");
         let amt = parseInt(document.getElementById('amount').value);
-        if (amt <= 0 || isNaN(amt) || amt > myCoins) return alert("Invalid amount or Low balance!");
+        if (amt <= 0 || isNaN(amt) || amt > myCoins) return alert("Invalid amount or insufficient coins!");
 
         betPlacedThisRound = true;
         document.getElementById('betDisplay').innerText = amt;
-        document.getElementById('confirmMsg').innerText = `${amt} Coins Bet Placed on ${selectedSide.toUpperCase()}`;
+        document.getElementById('confirmMsg').innerText = `${amt} Coins Bet Confirmed on ${selectedSide.toUpperCase()}`;
 
-        // Firebase Update
         update(ref(database, 'players/' + myId), {
             coins: myCoins - amt,
             currentBet: { side: selectedSide, amount: amt }
@@ -390,7 +356,7 @@
     window.sendDeposit = function() {
         let amt = document.getElementById('depAmt').value;
         let utr = document.getElementById('depUtr').value;
-        if(!amt || utr.length < 4) return alert("Fill deposit details properly!");
+        if(!amt || utr.length < 4) return alert("Please fill deposit information properly!");
         
         push(ref(database, 'depositRequests'), { 
             userId: myId, 
@@ -399,21 +365,16 @@
             timestamp: Date.now() 
         });
         
-        alert("Deposit Request Sent to Admin!");
+        alert("Deposit request submitted successfully! Pending Admin verification.");
         document.getElementById('depAmt').value = ''; 
         document.getElementById('depUtr').value = '';
     }
 
-    // UPI ID copy function 
     window.copyUPI = function() {
-        let upiText = document.getElementById('upiIdText').innerText;
-        navigator.clipboard.writeText(upiText);
-        alert("UPI ID Copied Successfully: " + upiText);
+        let text = document.getElementById('upiIdText').innerText;
+        navigator.clipboard.writeText(text);
+        alert("UPI ID Copied: " + text);
     }
-
-    // Auto Init Game on Load
-    startNewRound();
-    updateHistoryUI(['andar', 'bahar']); // Initial Dummy History state
 </script>
 </body>
 </html>

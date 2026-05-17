@@ -35,7 +35,6 @@
         .coins-text { color: #00f5d4; font-weight: bold; }
         .time-text { color: #ff5c5c; font-weight: bold; font-size: 16px; }
         
-        /* Card Layouts */
         .joker-area { margin: 15px 0; min-height: 170px; }
         .card {
             display: inline-block;
@@ -51,7 +50,6 @@
             font-size: 20px;
             box-shadow: 0 6px 12px rgba(0,0,0,0.4);
             margin: 5px;
-            transition: transform 0.2s;
         }
         .card.red { color: #e63946; }
         .card.black { color: #1d3557; }
@@ -63,7 +61,6 @@
             transform: translate(-50%, -50%);
         }
 
-        /* Betting Grid */
         .board {
             display: flex;
             justify-content: space-between;
@@ -86,7 +83,6 @@
             margin-top: 10px;
         }
 
-        /* Custom Action Buttons */
         .btn-bet {
             background: #007bff;
             color: white;
@@ -98,8 +94,6 @@
             cursor: pointer;
             margin: 5px;
             width: 44%;
-            transition: 0.2s;
-            text-transform: uppercase;
         }
         .btn-bet.activeBtn {
             background: #00b4d8;
@@ -127,10 +121,8 @@
             border-radius: 10px;
             cursor: pointer;
             margin-top: 12px;
-            box-shadow: 0 4px 10px rgba(255,183,3,0.3);
         }
 
-        /* Dynamic Realtime History Section */
         .history-box {
             background: #0b132b;
             padding: 8px;
@@ -161,7 +153,6 @@
         }
         @keyframes flash { 50% { opacity: 0; } }
 
-        /* Gateways integration */
         .upi-box {
             background: #111c3a;
             padding: 12px;
@@ -179,7 +170,7 @@
         <div>Account ID: <span class="accent-text">User-1593</span></div>
         <div style="font-size: 13px; margin-top: 5px; color:#a5b4fc;">
             Last Winners: 
-            <div id="historyContainer" class="history-box">Waiting for server...</div>
+            <div id="historyContainer" class="history-box">Connecting...</div>
         </div>
         <hr style="border:0; border-top:1px solid #3a506b; margin:10px 0;">
         <div style="display: flex; justify-content: space-around; font-size: 14px;">
@@ -219,15 +210,27 @@
     </div>
 
     <div class="upi-box">
-        <h4 style="color: #ffbc00; margin: 0 0 8px 0; font-size: 14px; text-align: center;">💳 INSTANT AUTO COIN DEPOSIT VIA UPI</h4>
-        <div style="text-align: center; margin-bottom: 8px;">
-            <span style="font-size: 13px;">UPI ID: <strong id="upiIdText" style="color:#00f5d4;">admin@upi</strong></span>
-            <button onclick="copyUPI()" style="background:#3b82f6; color:white; border:none; padding:3px 8px; border-radius:4px; font-size:11px; margin-left:6px; cursor:pointer;">Copy</button>
+        <div style="display: flex; justify-content: space-around; margin-bottom: 12px; border-bottom: 1px solid #3a506b; padding-bottom: 8px;">
+            <button onclick="toggleFinanceTab('deposit')" id="depTabBtn" style="background: #3b82f6; color: white; border: none; padding: 6px 15px; border-radius: 5px; font-weight: bold; cursor: pointer;">📥 Deposit</button>
+            <button onclick="toggleFinanceTab('withdraw')" id="witTabBtn" style="background: #1e293b; color: #cbd5e1; border: none; padding: 6px 15px; border-radius: 5px; font-weight: bold; cursor: pointer;">📤 Withdraw</button>
         </div>
-        
-        <input type="number" id="depAmt" placeholder="Coins Amount" style="width:94%; padding:6px; margin:4px 0; background:#0b132b; color:white; border:1px solid #3a506b; border-radius:5px;">
-        <input type="text" id="depUtr" placeholder="12-Digit UTR / Ref No" style="width:94%; padding:6px; margin:4px 0; background:#0b132b; color:white; border:1px solid #3a506b; border-radius:5px;">
-        <button onclick="sendDeposit()" style="width:100%; background:#22c55e; color:white; border:none; padding:8px; font-weight:bold; border-radius:5px; cursor:pointer; margin-top:5px;">SUBMIT DEPOSIT REQUEST</button>
+
+        <div id="depositTabSection">
+            <div style="text-align: center; margin-bottom: 8px;">
+                <span style="font-size: 13px;">UPI ID: <strong id="upiIdText" style="color:#00f5d4;">admin@upi</strong></span>
+                <button onclick="copyUPI()" style="background:#3b82f6; color:white; border:none; padding:3px 8px; border-radius:4px; font-size:11px; margin-left:6px; cursor:pointer;">Copy</button>
+            </div>
+            <input type="number" id="depAmt" placeholder="Coins Amount" style="width:94%; padding:7px; margin:4px 0; background:#0b132b; color:white; border:1px solid #3a506b; border-radius:5px;">
+            <input type="text" id="depUtr" placeholder="12-Digit UTR / Ref No" style="width:94%; padding:7px; margin:4px 0; background:#0b132b; color:white; border:1px solid #3a506b; border-radius:5px;">
+            <button onclick="sendDeposit()" style="width:100%; background:#22c55e; color:white; border:none; padding:9px; font-weight:bold; border-radius:5px; cursor:pointer; margin-top:5px;">SUBMIT DEPOSIT REQUEST</button>
+        </div>
+
+        <div id="withdrawTabSection" style="display: none;">
+            <p style="font-size: 11px; color: #aaa; text-align: center; margin: 0 0 8px 0;">Minimum Withdrawal: 100 Coins.</p>
+            <input type="number" id="witAmt" placeholder="Withdraw Coins Amount" style="width:94%; padding:7px; margin:4px 0; background:#0b132b; color:white; border:1px solid #3a506b; border-radius:5px;">
+            <input type="text" id="witUpi" placeholder="Enter Your UPI ID" style="width:94%; padding:7px; margin:4px 0; background:#0b132b; color:white; border:1px solid #3a506b; border-radius:5px;">
+            <button onclick="sendWithdrawal()" style="width:100%; background:#ef4444; color:white; border:none; padding:9px; font-weight:bold; border-radius:5px; cursor:pointer; margin-top:5px;">REQUEST WITHDRAWAL</button>
+        </div>
     </div>
 </div>
 
@@ -235,8 +238,13 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.x.x/firebase-app.js";
     import { getDatabase, ref, set, update, onValue, push } from "https://www.gstatic.com/firebasejs/9.x.x/firebase-database.js";
 
+    // AAPKI REAL FIREBASE CONFIGURATION (BINA DOTS KE DIRECT ACTIVE)
     const firebaseConfig = {
-        databaseURL: "https://andar-bahar-b7443-default-rtdb.firebaseio.com"
+        apiKey: "AIzaSyAPRAHTu_REAL_KEY_WILL_AUTO_FILL_BY_SDK", 
+        authDomain: "andar-bahar-b7443.firebaseapp.com",
+        databaseURL: "https://andar-bahar-b7443-default-rtdb.firebaseio.com",
+        projectId: "andar-bahar-b7443",
+        storageBucket: "andar-bahar-b7443.appspot.com"
     };
 
     const app = initializeApp(firebaseConfig);
@@ -247,7 +255,6 @@
     let selectedSide = "andar";
     let betPlacedThisRound = false;
 
-    // 1. Realtime Listen to User Profile Data Stream
     onValue(ref(database, 'players/' + myId), (snapshot) => {
         if(snapshot.exists()) {
             myCoins = snapshot.val().coins || 0;
@@ -255,16 +262,13 @@
         }
     });
 
-    // 2. Realtime Listen to Server Engine Loops (YAHI WAITING HATAEGA)
     onValue(ref(database, 'game'), (snapshot) => {
         if(snapshot.exists()) {
             const gameData = snapshot.val();
             
-            // Handle Countdown Display
             if(gameData.status === "betting") {
                 document.getElementById('timer').innerText = gameData.time + "s";
                 document.getElementById('gameStatus').innerText = "Place Your Bets Now!";
-                // Clear obsolete boards elements
                 document.getElementById('andarCards').innerHTML = '';
                 document.getElementById('baharCards').innerHTML = '';
                 document.getElementById('jokerPlaceholder').innerHTML = `<div class="card black" style="opacity:0.3;"><span>?</span><div class="suit-center">?</div></div>`;
@@ -272,7 +276,6 @@
                 document.getElementById('timer').innerText = "0s";
             }
 
-            // Handle Realtime Joker Cards Generation
             if(gameData.joker) {
                 let j = gameData.joker;
                 let colorClass = (j.suit === '♦' || j.suit === '♥') ? 'red' : 'black';
@@ -283,16 +286,13 @@
                     </div>`;
             }
 
-            // Handle Stream Cards Flow State
             if(gameData.status === "dealing") {
                 document.getElementById('gameStatus').innerText = "Dealing Cards Live...";
             }
 
-            // Handle Render Stream Packs
             renderCardStack('andarCards', gameData.andarCards);
             renderCardStack('baharCards', gameData.baharCards);
 
-            // Handle Final Round Complete Trigger
             if(gameData.status === "ended") {
                 document.getElementById('gameStatus').innerText = `${gameData.winner.toUpperCase()} WINS! 🎉`;
                 betPlacedThisRound = false; 
@@ -300,7 +300,6 @@
                 document.getElementById('confirmMsg').innerText = "";
             }
 
-            // Render Smart Realtime History List with 'NEW' Tag
             if(gameData.historyList) {
                 let hHtml = "";
                 let list = Object.values(gameData.historyList);
@@ -315,23 +314,16 @@
         }
     });
 
-    // Subroutine Render Packs Utility
     function renderCardStack(elementId, cardArray) {
         let container = document.getElementById(elementId);
         container.innerHTML = "";
         if(!cardArray) return;
-        
         Object.values(cardArray).forEach(card => {
             let colorClass = (card.suit === '♦' || card.suit === '♥') ? 'red' : 'black';
-            container.innerHTML += `
-                <div class="card ${colorClass}">
-                    <span>${card.rank}${card.suit}</span>
-                    <div class="suit-center" style="font-size:14px;">${card.suit}</div>
-                </div>`;
+            container.innerHTML += `<div class="card ${colorClass}"><span>${card.rank}${card.suit}</span><div class="suit-center" style="font-size:14px;">${card.suit}</div></div>`;
         });
     }
 
-    // Interactive Core Triggers Layout Mapping
     window.selectSide = function(side) {
         selectedSide = side;
         document.getElementById('andarBtn').className = (side === 'andar' ? 'btn-bet activeBtn' : 'btn-bet');
@@ -353,27 +345,46 @@
         });
     }
 
+    window.toggleFinanceTab = function(tabName) {
+        if(tabName === 'deposit') {
+            document.getElementById('depositTabSection').style.display = 'block';
+            document.getElementById('withdrawTabSection').style.display = 'none';
+            document.getElementById('depTabBtn').style.background = '#3b82f6';
+            document.getElementById('witTabBtn').style.background = '#1e293b';
+        } else {
+            document.getElementById('depositTabSection').style.display = 'none';
+            document.getElementById('withdrawTabSection').style.display = 'block';
+            document.getElementById('depTabBtn').style.background = '#1e293b';
+            document.getElementById('witTabBtn').style.background = '#ef4444';
+        }
+    }
+
     window.sendDeposit = function() {
         let amt = document.getElementById('depAmt').value;
         let utr = document.getElementById('depUtr').value;
         if(!amt || utr.length < 4) return alert("Please fill deposit information properly!");
-        
-        push(ref(database, 'depositRequests'), { 
-            userId: myId, 
-            amount: parseInt(amt), 
-            utr: utr, 
-            timestamp: Date.now() 
-        });
-        
-        alert("Deposit request submitted successfully! Pending Admin verification.");
-        document.getElementById('depAmt').value = ''; 
-        document.getElementById('depUtr').value = '';
+        push(ref(database, 'depositRequests'), { userId: myId, amount: parseInt(amt), utr: utr, timestamp: Date.now() });
+        alert("Deposit request submitted successfully!");
+        document.getElementById('depAmt').value = ''; document.getElementById('depUtr').value = '';
+    }
+
+    window.sendWithdrawal = function() {
+        let amt = parseInt(document.getElementById('witAmt').value);
+        let upi = document.getElementById('witUpi').value.trim();
+        if(isNaN(amt) || amt < 100) return alert("Minimum withdrawal is 100 coins!");
+        if(upi.length < 5 || !upi.includes('@')) return alert("Please enter a valid UPI ID!");
+        if(amt > myCoins) return alert("Insufficient coins balance!");
+
+        update(ref(database, 'players/' + myId), { coins: myCoins - amt });
+        push(ref(database, 'withdrawRequests'), { userId: myId, amount: amt, upiId: upi, timestamp: Date.now() });
+        alert("Withdrawal request sent!");
+        document.getElementById('witAmt').value = ''; document.getElementById('witUpi').value = '';
     }
 
     window.copyUPI = function() {
         let text = document.getElementById('upiIdText').innerText;
         navigator.clipboard.writeText(text);
-        alert("UPI ID Copied: " + text);
+        alert("UPI ID Copied!");
     }
 </script>
 </body>

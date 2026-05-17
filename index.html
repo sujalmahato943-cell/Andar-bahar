@@ -5,176 +5,43 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Andar Bahar Live Club</title>
     <style>
-        body {
-            background-color: #0b132b;
-            color: white;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            padding: 10px;
-            text-align: center;
-            -webkit-user-select: none;
-            user-select: none;
-        }
-        .container {
-            max-width: 480px;
-            margin: 0 auto;
-            background: #1c2541;
-            padding: 15px;
-            border-radius: 20px;
-            box-shadow: 0px 10px 30px rgba(0,0,0,0.7);
-            border: 1px solid #3a506b;
-        }
-        .header-box {
-            background: #222e50;
-            padding: 12px;
-            border-radius: 15px;
-            margin-bottom: 15px;
-            border: 1px solid #3a506b;
-        }
+        body { background-color: #0b132b; color: white; font-family: sans-serif; margin: 0; padding: 10px; text-align: center; -webkit-user-select: none; user-select: none; }
+        .container { max-width: 480px; margin: 0 auto; background: #1c2541; padding: 15px; border-radius: 20px; box-shadow: 0px 10px 30px rgba(0,0,0,0.7); border: 1px solid #3a506b; }
+        .header-box { background: #222e50; padding: 12px; border-radius: 15px; margin-bottom: 15px; border: 1px solid #3a506b; }
         .accent-text { color: #ffbc00; font-weight: bold; }
         .coins-text { color: #00f5d4; font-weight: bold; }
         .time-text { color: #ff5c5c; font-weight: bold; font-size: 16px; }
-        
         .joker-area { margin: 15px 0; min-height: 170px; }
-        .card {
-            display: inline-block;
-            width: 85px;
-            height: 125px;
-            background: #ffffff;
-            color: #000000;
-            border-radius: 10px;
-            padding: 8px;
-            box-sizing: border-box;
-            position: relative;
-            font-weight: bold;
-            font-size: 20px;
-            box-shadow: 0 6px 12px rgba(0,0,0,0.4);
-            margin: 5px;
-        }
+        .card { display: inline-block; width: 85px; height: 125px; background: #ffffff; color: #000000; border-radius: 10px; padding: 8px; box-sizing: border-box; position: relative; font-weight: bold; font-size: 20px; box-shadow: 0 6px 12px rgba(0,0,0,0.4); margin: 5px; }
         .card.red { color: #e63946; }
         .card.black { color: #1d3557; }
-        .card .suit-center {
-            font-size: 34px;
-            position: absolute;
-            top: 55%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-        }
-
-        .board {
-            display: flex;
-            justify-content: space-between;
-            margin: 15px 0;
-        }
-        .side-box {
-            width: 48%;
-            background: #0b132b;
-            padding: 10px;
-            border-radius: 12px;
-            min-height: 180px;
-            border: 1px solid #3a506b;
-            box-sizing: border-box;
-        }
-        .card-container {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 5px;
-            margin-top: 10px;
-        }
-
-        .btn-bet {
-            background: #007bff;
-            color: white;
-            border: none;
-            padding: 12px;
-            font-size: 15px;
-            font-weight: bold;
-            border-radius: 10px;
-            cursor: pointer;
-            margin: 5px;
-            width: 44%;
-        }
-        .btn-bet.activeBtn {
-            background: #00b4d8;
-            box-shadow: 0 0 15px #00b4d8;
-        }
-        .input-amt {
-            width: 60%;
-            padding: 10px;
-            font-size: 16px;
-            border-radius: 8px;
-            border: 2px solid #3a506b;
-            background: #0b132b;
-            color: white;
-            text-align: center;
-            margin-top: 10px;
-        }
-        .btn-submit {
-            width: 92%;
-            background: #ffb703;
-            color: #023047;
-            border: none;
-            padding: 12px;
-            font-weight: bold;
-            font-size: 16px;
-            border-radius: 10px;
-            cursor: pointer;
-            margin-top: 12px;
-        }
-
-        .history-box {
-            background: #0b132b;
-            padding: 8px;
-            border-radius: 8px;
-            margin-top: 5px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 6px;
-            min-height: 35px;
-        }
-        .history-item {
-            padding: 3px 8px;
-            border-radius: 5px;
-            font-weight: bold;
-            font-size: 13px;
-        }
+        .card .suit-center { font-size: 34px; position: absolute; top: 55%; left: 50%; transform: translate(-50%, -50%); }
+        .board { display: flex; justify-content: space-between; margin: 15px 0; }
+        .side-box { width: 48%; background: #0b132b; padding: 10px; border-radius: 12px; min-height: 180px; border: 1px solid #3a506b; box-sizing: border-box; }
+        .card-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 5px; margin-top: 10px; }
+        .btn-bet { background: #007bff; color: white; border: none; padding: 12px; font-size: 15px; font-weight: bold; border-radius: 10px; cursor: pointer; margin: 5px; width: 44%; }
+        .btn-bet.activeBtn { background: #00b4d8; box-shadow: 0 0 15px #00b4d8; }
+        .input-amt { width: 60%; padding: 10px; font-size: 16px; border-radius: 8px; border: 2px solid #3a506b; background: #0b132b; color: white; text-align: center; margin-top: 10px; }
+        .btn-submit { width: 92%; background: #ffb703; color: #023047; border: none; padding: 12px; font-weight: bold; font-size: 16px; border-radius: 10px; cursor: pointer; margin-top: 12px; }
+        .history-box { background: #0b132b; padding: 8px; border-radius: 8px; margin-top: 5px; display: flex; justify-content: center; align-items: center; gap: 6px; min-height: 35px; }
+        .history-item { padding: 3px 8px; border-radius: 5px; font-weight: bold; font-size: 13px; }
         .blue-badge { background: #2563eb; color: white; }
         .gold-badge { background: #d97706; color: white; }
-        .new-tag {
-            background-color: #ff0055;
-            color: white;
-            font-size: 9px;
-            padding: 1px 4px;
-            border-radius: 3px;
-            margin-left: 4px;
-            animation: flash 0.8s linear infinite;
-        }
-        @keyframes flash { 50% { opacity: 0; } }
-
-        .upi-box {
-            background: #111c3a;
-            padding: 12px;
-            border-radius: 12px;
-            margin-top: 20px;
-            border: 1px dashed #3a506b;
-            text-align: left;
-        }
+        .upi-box { background: #111c3a; padding: 12px; border-radius: 12px; margin-top: 20px; border: 1px dashed #3a506b; text-align: left; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div class="header-box">
-        <div>Account ID: <span class="accent-text">User-1593</span></div>
+        <div>Account ID: <span class="accent-text" id="displayPlayerId">Loading...</span></div>
         <div style="font-size: 13px; margin-top: 5px; color:#a5b4fc;">
             Last Winners: 
             <div id="historyContainer" class="history-box">Connecting...</div>
         </div>
         <hr style="border:0; border-top:1px solid #3a506b; margin:10px 0;">
         <div style="display: flex; justify-content: space-around; font-size: 14px;">
-            <div>Coins: <span class="coins-text" id="topCoins">600</span></div>
+            <div>Coins: <span class="coins-text" id="topCoins">--</span></div>
             <div>Your Bet: <span class="accent-text" id="betDisplay">0</span></div>
             <div>Time: <span class="time-text" id="timer">--</span></div>
         </div>
@@ -183,19 +50,17 @@
     <div id="confirmMsg" style="color: #00f5d4; font-weight: bold; margin-bottom: 8px; min-height: 18px; font-size:13px;"></div>
 
     <div class="joker-area">
-        <div id="jokerPlaceholder">
-            <div class="card black" style="opacity:0.3;"><span>?</span><div class="suit-center">?</div></div>
-        </div>
+        <div id="jokerPlaceholder"><div class="card black" style="opacity:0.3;"><span>?</span><div class="suit-center">?</div></div></div>
         <h3 id="gameStatus" style="color: #ffbc00; margin: 8px 0; font-size:18px;">Connecting Server...</h3>
     </div>
 
     <div class="board">
         <div class="side-box">
-            <h4 style="margin:0; color:#3b82f6; font-size:15px; letter-spacing:1px;">ANDAR</h4>
+            <h4 style="margin:0; color:#3b82f6; font-size:15px;">ANDAR</h4>
             <div class="card-container" id="andarCards"></div>
         </div>
         <div class="side-box">
-            <h4 style="margin:0; color:#eab308; font-size:15px; letter-spacing:1px;">BAHAR</h4>
+            <h4 style="margin:0; color:#eab308; font-size:15px;">BAHAR</h4>
             <div class="card-container" id="baharCards"></div>
         </div>
     </div>
@@ -217,8 +82,7 @@
 
         <div id="depositTabSection">
             <div style="text-align: center; margin-bottom: 8px;">
-                <span style="font-size: 13px;">UPI ID: <strong id="upiIdText" style="color:#00f5d4;">admin@upi</strong></span>
-                <button onclick="copyUPI()" style="background:#3b82f6; color:white; border:none; padding:3px 8px; border-radius:4px; font-size:11px; margin-left:6px; cursor:pointer;">Copy</button>
+                <span>UPI ID: <strong style="color:#00f5d4;">admin@upi</strong></span>
             </div>
             <input type="number" id="depAmt" placeholder="Coins Amount" style="width:94%; padding:7px; margin:4px 0; background:#0b132b; color:white; border:1px solid #3a506b; border-radius:5px;">
             <input type="text" id="depUtr" placeholder="12-Digit UTR / Ref No" style="width:94%; padding:7px; margin:4px 0; background:#0b132b; color:white; border:1px solid #3a506b; border-radius:5px;">
@@ -226,8 +90,7 @@
         </div>
 
         <div id="withdrawTabSection" style="display: none;">
-            <p style="font-size: 11px; color: #aaa; text-align: center; margin: 0 0 8px 0;">Minimum Withdrawal: 100 Coins.</p>
-            <input type="number" id="witAmt" placeholder="Withdraw Coins Amount" style="width:94%; padding:7px; margin:4px 0; background:#0b132b; color:white; border:1px solid #3a506b; border-radius:5px;">
+            <input type="number" id="witAmt" placeholder="Withdraw Coins" style="width:94%; padding:7px; margin:4px 0; background:#0b132b; color:white; border:1px solid #3a506b; border-radius:5px;">
             <input type="text" id="witUpi" placeholder="Enter Your UPI ID" style="width:94%; padding:7px; margin:4px 0; background:#0b132b; color:white; border:1px solid #3a506b; border-radius:5px;">
             <button onclick="sendWithdrawal()" style="width:100%; background:#ef4444; color:white; border:none; padding:9px; font-weight:bold; border-radius:5px; cursor:pointer; margin-top:5px;">REQUEST WITHDRAWAL</button>
         </div>
@@ -238,6 +101,7 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.x.x/firebase-app.js";
     import { getDatabase, ref, set, update, onValue, push } from "https://www.gstatic.com/firebasejs/9.x.x/firebase-database.js";
 
+    // Dynamic Connection - Strict Configuration Removed for Web Client
     const firebaseConfig = {
         databaseURL: "https://andar-bahar-b7443-default-rtdb.firebaseio.com"
     };
@@ -245,22 +109,28 @@
     const app = initializeApp(firebaseConfig);
     const database = getDatabase(app);
 
-    let myId = "User-1593";
-    let myCoins = 600;
+    // Get Player ID from Link dynamic Parameter (?id=User-1593)
+    const urlParams = new URLSearchParams(window.location.search);
+    let myId = urlParams.get('id') || "Guest-" + Math.floor(1000 + Math.random() * 9000);
+    document.getElementById("displayPlayerId").innerText = myId;
+
+    let myCoins = 0;
     let selectedSide = "andar";
     let betPlacedThisRound = false;
 
+    // Check if player exists, if not create record
     onValue(ref(database, 'players/' + myId), (snapshot) => {
         if(snapshot.exists()) {
             myCoins = snapshot.val().coins || 0;
             document.getElementById('topCoins').innerText = myCoins;
+        } else {
+            set(ref(database, 'players/' + myId), { coins: 1000, currentBet: null });
         }
     });
 
     onValue(ref(database, 'game'), (snapshot) => {
         if(snapshot.exists()) {
             const gameData = snapshot.val();
-            
             if(gameData.status === "betting") {
                 document.getElementById('timer').innerText = gameData.time + "s";
                 document.getElementById('gameStatus').innerText = "Place Your Bets Now!";
@@ -274,35 +144,23 @@
             if(gameData.joker) {
                 let j = gameData.joker;
                 let colorClass = (j.suit === '♦' || j.suit === '♥') ? 'red' : 'black';
-                document.getElementById('jokerPlaceholder').innerHTML = `
-                    <div class="card ${colorClass}">
-                        <span>${j.rank}${j.suit}</span>
-                        <div class="suit-center">${j.suit}</div>
-                    </div>`;
+                document.getElementById('jokerPlaceholder').innerHTML = `<div class="card ${colorClass}"><span>${j.rank}${j.suit}</span><div class="suit-center">${j.suit}</div></div>`;
             }
 
-            if(gameData.status === "dealing") {
-                document.getElementById('gameStatus').innerText = "Dealing Cards Live...";
-            }
-
+            if(gameData.status === "dealing") { document.getElementById('gameStatus').innerText = "Dealing Cards Live..."; }
             renderCardStack('andarCards', gameData.andarCards);
             renderCardStack('baharCards', gameData.baharCards);
 
             if(gameData.status === "ended") {
                 document.getElementById('gameStatus').innerText = `${gameData.winner.toUpperCase()} WINS! 🎉`;
-                betPlacedThisRound = false; 
-                document.getElementById('betDisplay').innerText = "0";
-                document.getElementById('confirmMsg').innerText = "";
+                betPlacedThisRound = false; document.getElementById('betDisplay').innerText = "0"; document.getElementById('confirmMsg').innerText = "";
             }
 
             if(gameData.historyList) {
-                let hHtml = "";
-                let list = Object.values(gameData.historyList);
+                let hHtml = ""; let list = Object.values(gameData.historyList);
                 list.forEach((win, index) => {
-                    let isRecent = (index === list.length - 1);
                     let badge = (win === 'andar') ? 'blue-badge' : 'gold-badge';
-                    let tag = isRecent ? '<span class="new-tag">NEW</span>' : '';
-                    hHtml += `<div class="history-item ${badge}">${win.substring(0,1).toUpperCase()}${tag}</div>`;
+                    hHtml += `<div class="history-item ${badge}">${win.substring(0,1).toUpperCase()}</div>`;
                 });
                 document.getElementById('historyContainer').innerHTML = hHtml;
             }
@@ -310,9 +168,7 @@
     });
 
     function renderCardStack(elementId, cardArray) {
-        let container = document.getElementById(elementId);
-        container.innerHTML = "";
-        if(!cardArray) return;
+        let container = document.getElementById(elementId); container.innerHTML = ""; if(!cardArray) return;
         Object.values(cardArray).forEach(card => {
             let colorClass = (card.suit === '♦' || card.suit === '♥') ? 'red' : 'black';
             container.innerHTML += `<div class="card ${colorClass}"><span>${card.rank}${card.suit}</span><div class="suit-center" style="font-size:14px;">${card.suit}</div></div>`;
@@ -326,60 +182,34 @@
     }
 
     window.placeBet = function() {
-        if(betPlacedThisRound) return alert("Bet already placed this round!");
+        if(betPlacedThisRound) return alert("Bet already placed!");
         let amt = parseInt(document.getElementById('amount').value);
-        if (amt <= 0 || isNaN(amt) || amt > myCoins) return alert("Invalid amount or insufficient coins!");
-
-        betPlacedThisRound = true;
-        document.getElementById('betDisplay').innerText = amt;
-        document.getElementById('confirmMsg').innerText = `${amt} Coins Bet Confirmed on ${selectedSide.toUpperCase()}`;
-
-        update(ref(database, 'players/' + myId), {
-            coins: myCoins - amt,
-            currentBet: { side: selectedSide, amount: amt }
-        });
+        if (amt <= 0 || isNaN(amt) || amt > myCoins) return alert("Invalid amount!");
+        betPlacedThisRound = true; document.getElementById('betDisplay').innerText = amt;
+        update(ref(database, 'players/' + myId), { coins: myCoins - amt, currentBet: { side: selectedSide, amount: amt } });
     }
 
     window.toggleFinanceTab = function(tabName) {
         if(tabName === 'deposit') {
-            document.getElementById('depositTabSection').style.display = 'block';
-            document.getElementById('withdrawTabSection').style.display = 'none';
-            document.getElementById('depTabBtn').style.background = '#3b82f6';
-            document.getElementById('witTabBtn').style.background = '#1e293b';
+            document.getElementById('depositTabSection').style.display = 'block'; document.getElementById('withdrawTabSection').style.display = 'none';
         } else {
-            document.getElementById('depositTabSection').style.display = 'none';
-            document.getElementById('withdrawTabSection').style.display = 'block';
-            document.getElementById('depTabBtn').style.background = '#1e293b';
-            document.getElementById('witTabBtn').style.background = '#ef4444';
+            document.getElementById('depositTabSection').style.display = 'none'; document.getElementById('withdrawTabSection').style.display = 'block';
         }
     }
 
     window.sendDeposit = function() {
-        let amt = document.getElementById('depAmt').value;
-        let utr = document.getElementById('depUtr').value;
-        if(!amt || utr.length < 4) return alert("Please fill deposit information properly!");
+        let amt = document.getElementById('depAmt').value; let utr = document.getElementById('depUtr').value;
+        if(!amt || utr.length < 4) return alert("Invalid details!");
         push(ref(database, 'depositRequests'), { userId: myId, amount: parseInt(amt), utr: utr, timestamp: Date.now() });
-        alert("Deposit request submitted successfully!");
-        document.getElementById('depAmt').value = ''; document.getElementById('depUtr').value = '';
+        alert("Submitted!");
     }
 
     window.sendWithdrawal = function() {
-        let amt = parseInt(document.getElementById('witAmt').value);
-        let upi = document.getElementById('witUpi').value.trim();
-        if(isNaN(amt) || amt < 100) return alert("Minimum withdrawal is 100 coins!");
-        if(upi.length < 5 || !upi.includes('@')) return alert("Please enter a valid UPI ID!");
-        if(amt > myCoins) return alert("Insufficient coins balance!");
-
+        let amt = parseInt(document.getElementById('witAmt').value); let upi = document.getElementById('witUpi').value.trim();
+        if(isNaN(amt) || amt < 100 || amt > myCoins) return alert("Invalid amount!");
         update(ref(database, 'players/' + myId), { coins: myCoins - amt });
         push(ref(database, 'withdrawRequests'), { userId: myId, amount: amt, upiId: upi, timestamp: Date.now() });
-        alert("Withdrawal request sent!");
-        document.getElementById('witAmt').value = ''; document.getElementById('witUpi').value = '';
-    }
-
-    window.copyUPI = function() {
-        let text = document.getElementById('upiIdText').innerText;
-        navigator.clipboard.writeText(text);
-        alert("UPI ID Copied!");
+        alert("Requested!");
     }
 </script>
 </body>

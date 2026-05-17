@@ -101,24 +101,22 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.x.x/firebase-app.js";
     import { getDatabase, ref, set, update, onValue, push } from "https://www.gstatic.com/firebasejs/9.x.x/firebase-database.js";
 
-    // Dynamic Connection - Strict Configuration Removed for Web Client
+    // 100% CORRECT ASLI DATABASE URL LINK
     const firebaseConfig = {
-        databaseURL: "https://andar-bahar-b7443-default-rtdb.firebaseio.com"
+        databaseURL: "https://my-first-app-cad29-default-rtdb.firebaseio.com"
     };
 
     const app = initializeApp(firebaseConfig);
     const database = getDatabase(app);
 
-    // Get Player ID from Link dynamic Parameter (?id=User-1593)
     const urlParams = new URLSearchParams(window.location.search);
-    let myId = urlParams.get('id') || "Guest-" + Math.floor(1000 + Math.random() * 9000);
+    let myId = urlParams.get('id') || "User-1593";
     document.getElementById("displayPlayerId").innerText = myId;
 
     let myCoins = 0;
     let selectedSide = "andar";
     let betPlacedThisRound = false;
 
-    // Check if player exists, if not create record
     onValue(ref(database, 'players/' + myId), (snapshot) => {
         if(snapshot.exists()) {
             myCoins = snapshot.val().coins || 0;

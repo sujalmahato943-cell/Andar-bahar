@@ -7,7 +7,7 @@
     <style>
         body { background: #0f172a; color: white; font-family: sans-serif; text-align: center; padding: 20px; }
         .box { max-width: 500px; margin: 0 auto; background: #1e293b; padding: 20px; border-radius: 15px; border: 1px solid #334155; }
-        button { padding: 12px 24px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; margin: 8px; font-size: 14px; }
+        button { padding: 12px 24px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; margin: 8px; font-size: 14px; text-transform: uppercase; }
         .btn-auto { background: #64748b; color: white; }
         .btn-andar { background: #2563eb; color: white; }
         .btn-bahar { background: #d97706; color: white; }
@@ -28,7 +28,7 @@
         <button class="btn-andar" onclick="setForce('andar')">FORCE ANDAR WINS</button>
         <button class="btn-bahar" onclick="setForce('bahar')">FORCE BAHAR WINS</button>
         <br>
-        <button class="btn-auto" onclick="setForce('auto')" style="width: 94%;">RESET TO 100% AUTOMATIC MODE</button>
+        <button class="btn-auto" onclick="setForce('auto')" style="width: 94%;">RESET TO AUTOMATIC MODE</button>
     </div>
 </div>
 
@@ -36,6 +36,7 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.x.x/firebase-app.js";
     import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/9.x.x/firebase-database.js";
 
+    // Direct Bypass Synced Config matching index.html
     const firebaseConfig = {
         databaseURL: "https://andar-bahar-b7443-default-rtdb.firebaseio.com"
     };

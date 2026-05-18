@@ -72,23 +72,22 @@
         .btn-red { background: #dc2626; color: white; }
         .btn-orange { background: #ea580c; color: white; }
 
-        /* Live Dashboard Styling */
+        /* Realtime Dashboard Dashboard Grid */
         .live-dash {
-            display: flex;
-            justify-content: space-between;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
             gap: 10px;
             margin-bottom: 15px;
         }
         .dash-card {
-            flex: 1;
             background: #1e293b;
             padding: 10px;
             border-radius: 8px;
             text-align: center;
             border: 1px solid #475569;
         }
-        .dash-card h4 { margin: 0 0 5px 0; font-size: 12px; color: #94a3b8; text-transform: uppercase; }
-        .dash-card p { margin: 0; font-size: 20px; font-weight: bold; }
+        .dash-card h4 { margin: 0 0 5px 0; font-size: 11px; color: #94a3b8; text-transform: uppercase; }
+        .dash-card p { margin: 0; font-size: 18px; font-weight: bold; }
 
         .result-display {
             background: #1e293b;
@@ -111,7 +110,7 @@
             background: rgba(56, 189, 248, 0.1);
             border: 1px dashed #38bdf8;
             color: #38bdf8;
-            padding: 10px;
+            padding: 12px;
             border-radius: 8px;
             font-weight: bold;
             font-size: 16px;
@@ -124,40 +123,51 @@
 
 <div class="admin-container">
     <h2>🛠️ MASTER CONTROL PANEL</h2>
-    <p style="text-align:center; color:#64748b; font-size:13px; margin-top:-10px;">Manual Selection Game Board</p>
+    <p style="text-align:center; color:#64748b; font-size:13px; margin-top:-10px;">Smart Engine Mode Active</p>
 
-    <!-- 📊 LIVE BOARD: TOTAL BETS ON BOTH SIDES -->
+    <!-- 📊 REALTIME METRICS DASHBOARD (COINS & PLAYERS COUNT) -->
     <div class="live-dash">
+        <div class="dash-card" style="border-left: 4px solid #a855f7;">
+            <h4>👥 Active Players</h4>
+            <p id="totalPlayersCount" style="color: #a855f7;">0</p>
+        </div>
         <div class="dash-card" style="border-left: 4px solid #3b82f6;">
-            <h4>🔵 Total Andar Bets</h4>
-            <p id="totalAndarPool" style="color: #3b82f6;">0 Coins</p>
+            <h4>🔵 Total Andar Pool</h4>
+            <p id="totalAndarPool" style="color: #3b82f6;">0</p>
         </div>
         <div class="dash-card" style="border-left: 4px solid #eab308;">
-            <h4>🟡 Total Bahar Bets</h4>
-            <p id="totalBaharPool" style="color: #eab308;">0 Coins</p>
+            <h4>🟡 Total Bahar Pool</h4>
+            <p id="totalBaharPool" style="color: #eab308;">0</p>
         </div>
     </div>
 
-    <!-- 📢 ADMIN LIVE SELECTION STATUS SHOWER -->
+    <!-- 📢 SYSTEM LIVE STATUS MESSAGER -->
     <div id="adminChoiceStatus" class="admin-choice-box">
-        Current Round Status: Waiting for Admin Winner Selection...
+        Game Status: Loading Engine...
     </div>
 
-    <!-- 🏆 DECLARE WINNER SYSTEM DIRECTLY UNDER BETS DISPLAY -->
+    <!-- 🎮 TIMER PHASE SYSTEM -->
     <div class="section-box">
-        <h3>🏆 Declare Winner (Manual Selection)</h3>
-        <p style="color:#94a3b8; font-size:12px; margin-top:-5px; margin-bottom:12px;">Clicking a side will instantly lock that winner, credit the winning players, and log the selection.</p>
+        <h3>🎮 Timer Controller</h3>
+        <label for="timerInput">Set Game Timer (Seconds):</label>
+        <input type="number" id="timerInput" value="30">
+        <button class="btn btn-green" style="width:100%; font-size:16px;" onclick="startNewBettingRound()">🟢 START NEW ROUND TIME</button>
+    </div>
+
+    <!-- 🏆 DECLARE WINNER SYSTEM OVERRIDES -->
+    <div class="section-box">
+        <h3>🏆 Admin Choice Override (Instant Winner Select)</h3>
+        <p style="color:#94a3b8; font-size:12px; margin-top:-5px; margin-bottom:12px;">If you click below, the timer stops immediately, and your choice wins. Otherwise, the low-bet side wins automatically when the timer finishes.</p>
         
         <div class="btn-grid">
-            <button class="btn btn-blue" style="font-size:17px;" onclick="declareWinner('andar')">🔵 DECLARE ANDAR WIN</button>
-            <button class="btn btn-orange" style="font-size:17px;" onclick="declareWinner('bahar')">🟡 DECLARE BAHAR WIN</button>
+            <button class="btn btn-blue" style="font-size:16px;" onclick="adminOverrideWinner('andar')">🔵 MANUAL ANDAR WIN</button>
+            <button class="btn btn-orange" style="font-size:16px;" onclick="adminOverrideWinner('bahar')">🟡 MANUAL BAHAR WIN</button>
         </div>
-        <button class="btn btn-red" style="width:100%; margin-top:5px; font-size:15px;" onclick="resetRoundManual()">🔄 RESTART NEW CLEAN ROUND</button>
     </div>
 
-    <!-- 👤 MODULE 2: PLAYER SEARCH & COIN MANAGEMENT -->
+    <!-- 👤 MODULE 3: PLAYER SEARCH & COIN ADD/MINUS -->
     <div class="section-box">
-        <h3>👤 Player Account Management</h3>
+        <h3>👤 Individual Player Wallet Manager</h3>
         <label for="searchPlayerId">Enter Player Unique ID:</label>
         <input type="text" id="searchPlayerId" placeholder="e.g., PLAYER-12345">
         <button class="btn btn-blue" onclick="searchPlayer()">🔍 SEARCH PLAYER DETAILS</button>
@@ -201,18 +211,26 @@
     const database = getDatabase(app);
 
     let activeSearchedId = null;
+    let countdownInterval = null;
+    let globalTimerSeconds = 0;
 
-    // ==========================================
-    // 👀 LIVE LOOP: CALCULATE TOTAL SIDE BETS
-    // ==========================================
+    let currentAndarPool = 0;
+    let currentBaharPool = 0;
+    let isRoundEnded = false;
+
+    // ========================================================
+    // 👀 REALTIME SYNC: COINS TRACKER & PLAYERS QUANTITY LOOPS
+    // ========================================================
     onValue(ref(database, 'players'), (snapshot) => {
         let totalAndar = 0;
         let totalBahar = 0;
+        let uniquePlayersCount = 0;
         
         if(snapshot.exists()) {
             const playersData = snapshot.val();
             Object.values(playersData).forEach(player => {
                 if(player.currentBet && player.currentBet.amount) {
+                    uniquePlayersCount++;
                     let amt = parseInt(player.currentBet.amount) || 0;
                     if(player.currentBet.side === 'andar') {
                         totalAndar += amt;
@@ -222,33 +240,97 @@
                 }
             });
         }
+        currentAndarPool = totalAndar;
+        currentBaharPool = totalBahar;
+
+        document.getElementById('totalPlayersCount').innerText = uniquePlayersCount;
         document.getElementById('totalAndarPool').innerText = totalAndar + " Coins";
         document.getElementById('totalBaharPool').innerText = totalBahar + " Coins";
     });
 
-    // Sync Game current winner selection text message on Panel load
+    // Monitor live game states
     onValue(ref(database, 'game'), (snapshot) => {
         if(snapshot.exists()) {
             const gameData = snapshot.val();
-            if(gameData.status === "ended" && gameData.winner) {
-                document.getElementById('adminChoiceStatus').innerHTML = `📢 Admin chose <span style="text-transform: uppercase; color:#ffbc00;">${gameData.winner}</span> for Win!`;
-            } else {
-                document.getElementById('adminChoiceStatus').innerText = "Current Round Status: Betting Active / Waiting for Winner Selection...";
+            if(gameData.status === "betting") {
+                document.getElementById('adminChoiceStatus').innerHTML = `⏳ Betting Phase Running... Time Left: <span style="color:#4ade80;">${gameData.time}s</span>`;
+            } else if(gameData.status === "ended") {
+                document.getElementById('adminChoiceStatus').innerHTML = `📢 Winner declared! Choice: <span style="text-transform: uppercase; color:#ffbc00;">${gameData.winner}</span>. Loading next round...`;
+            } else if(gameData.status === "dealing") {
+                document.getElementById('adminChoiceStatus').innerText = "🎰 Dealing Cards... Parsing Automatic Winner Systems...";
             }
         }
     });
 
-    // ==========================================
-    // 🏆 MANUAL WINNER DECLARE (NO AUTO-RESET)
-    // ==========================================
-    window.declareWinner = function(winningSide) {
+    // ========================================================
+    // 🎮 ENGINE OPERATION 1: TIMER LOOP START
+    // ========================================================
+    window.startNewBettingRound = function() {
+        clearInterval(countdownInterval);
+        isRoundEnded = false;
+        
+        globalTimerSeconds = parseInt(document.getElementById('timerInput').value) || 30;
         const gameRef = ref(database, 'game');
 
-        // 1. Database game status setup (End phase configuration locks)
-        update(gameRef, { status: "ended", winner: winningSide });
-        push(ref(database, 'game/historyList'), winningSide);
+        update(gameRef, { status: "betting", time: globalTimerSeconds, winner: null, andarCards: null, baharCards: null });
 
-        // 2. Real-time Winner Payout loop distribution
+        countdownInterval = setInterval(() => {
+            globalTimerSeconds--;
+            if(globalTimerSeconds <= 0) {
+                clearInterval(countdownInterval);
+                // Timer finished! If admin didn't select, invoke Auto Low Bet system
+                if(!isRoundEnded) {
+                    processAutoLowBetWinner();
+                }
+            } else {
+                update(gameRef, { time: globalTimerSeconds });
+            }
+        }, 1000);
+    }
+
+    // ========================================================
+    // 🧠 ENGINE OPERATION 2: AUTOMATIC LOW BET CALCULATION
+    // ========================================================
+    function processAutoLowBetWinner() {
+        if(isRoundEnded) return;
+        update(ref(database, 'game'), { status: "dealing", time: 0 });
+
+        let calculatedWinner = "andar"; // Default fallback choice
+
+        if(currentAndarPool === currentBaharPool) {
+            // Equal coins balance rule: choose random
+            calculatedWinner = Math.random() < 0.5 ? "andar" : "bahar";
+        } else if(currentAndarPool > currentBaharPool) {
+            calculatedWinner = "bahar"; // Bahar has fewer coins, Bahar wins
+        } else {
+            calculatedWinner = "andar"; // Andar has fewer coins, Andar wins
+        }
+
+        executePayoutAndTriggerNextRound(calculatedWinner);
+    }
+
+    // ========================================================
+    // 🏆 ENGINE OPERATION 3: ADMIN MANUAL OVERRIDE CHOICE
+    // ========================================================
+    window.adminOverrideWinner = function(adminChoice) {
+        if(isRoundEnded) return alert("This round has already finished!");
+        clearInterval(countdownInterval); // Instantly kill time loops
+        
+        executePayoutAndTriggerNextRound(adminChoice);
+    }
+
+    // ========================================================
+    // 💸 CORE LOGIC: EXECUTE PAYOUTS & AUTOMATIC REBOOT
+    // ========================================================
+    function executePayoutAndTriggerNextRound(finalWinnerSide) {
+        isRoundEnded = true;
+        const gameRef = ref(database, 'game');
+
+        // Step 1: Update winner metadata logs globally
+        update(gameRef, { status: "ended", winner: finalWinnerSide });
+        push(ref(database, 'game/historyList'), finalWinnerSide);
+
+        // Step 2: Extract current user configurations and calculate balances
         get(ref(database, 'players')).then((snapshot) => {
             if(snapshot.exists()) {
                 const allPlayers = snapshot.val();
@@ -256,50 +338,34 @@
                 Object.keys(allPlayers).forEach((playerId) => {
                     const playerData = allPlayers[playerId];
                     
-                    // Winner credit calculation node logic
-                    if(playerData.currentBet && playerData.currentBet.side === winningSide) {
-                        let betPoolAmount = parseInt(playerData.currentBet.amount) || 0;
-                        let netPayoutTotal = betPoolAmount * 2; // Dynamic multi stack double credit
+                    if(playerData.currentBet) {
+                        if(playerData.currentBet.side === finalWinnerSide) {
+                            let betAmt = parseInt(playerData.currentBet.amount) || 0;
+                            let prizeMultiplier = betAmt * 2;
 
-                        update(ref(database, 'players/' + playerId), {
-                            coins: increment(netPayoutTotal)
-                        });
+                            // Credit winner wallet instantly
+                            update(ref(database, 'players/' + playerId), {
+                                coins: increment(prizeMultiplier),
+                                currentBet: null
+                            });
+                        } else {
+                            // Wipe looser currentBet nodes
+                            update(ref(database, 'players/' + playerId), { currentBet: null });
+                        }
                     }
                 });
-                alert(`Winner ${winningSide.toUpperCase()} successfully processed & paid out! Click 'Restart Round' when you want to clear the screen for next game.`);
             }
+
+            // Step 3: 5 Seconds screen hold time, then system automatically launches next round!
+            setTimeout(() => {
+                startNewBettingRound(); // Recursive loop boot call
+            }, 5000); 
         });
     }
 
-    // ==========================================
-    // 🔄 MANUAL CLEAN RESET BUTTON
-    // ==========================================
-    window.resetRoundManual = function() {
-        get(ref(database, 'players')).then((snapshot) => {
-            if(snapshot.exists()) {
-                const allPlayers = snapshot.val();
-                Object.keys(allPlayers).forEach((id) => {
-                    update(ref(database, 'players/' + id), { currentBet: null });
-                });
-            }
-        });
-
-        // Setup clean state values for next round structure
-        update(ref(database, 'game'), {
-            status: "betting",
-            time: 30, // Default local server state timing initialization
-            joker: null,
-            winner: null,
-            andarCards: null,
-            baharCards: null
-        }).then(() => {
-            alert("Board flushed completely! Ready for new bets.");
-        });
-    }
-
-    // ==========================================
+    // ========================================================
     // 👤 SEARCH & WALLET MANAGEMENT
-    // ==========================================
+    // ========================================================
     window.searchPlayer = function() {
         const pIdInput = document.getElementById('searchPlayerId').value.trim();
         if(!pIdInput) return alert("Please enter a valid Player ID!");

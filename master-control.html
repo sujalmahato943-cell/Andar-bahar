@@ -3,449 +3,181 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Master Control Panel - Fixed System</title>
+    <title>Master Control Hub</title>
     <style>
-        body {
-            background-color: #0f172a;
-            color: #f8fafc;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            padding: 20px;
-        }
-        .admin-container {
-            max-width: 700px;
-            margin: 0 auto;
-            background: #1e293b;
-            padding: 20px;
-            border-radius: 15px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-            border: 1px solid #334155;
-        }
-        h2, h3 {
-            text-align: center;
-            color: #38bdf8;
-            margin-top: 0;
-        }
-        .section-box {
-            background: #0f172a;
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            border: 1px solid #334155;
-        }
-        label {
-            display: block;
-            font-size: 14px;
-            color: #94a3b8;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-        input[type="text"], input[type="number"] {
-            width: 100%;
-            padding: 10px;
-            font-size: 16px;
-            border-radius: 8px;
-            border: 1px solid #334155;
-            background: #1e293b;
-            color: white;
-            box-sizing: border-box;
-            margin-bottom: 12px;
-        }
-        .btn-grid {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 10px;
-        }
-        .btn {
-            flex: 1;
-            padding: 12px;
-            font-size: 15px;
-            font-weight: bold;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-        .btn-blue { background: #0284c7; color: white; }
-        .btn-green { background: #16a34a; color: white; }
-        .btn-red { background: #dc2626; color: white; }
-        .btn-orange { background: #ea580c; color: white; }
-
-        .live-dash {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-        .dash-card {
-            background: #1e293b;
-            padding: 10px;
-            border-radius: 8px;
-            text-align: center;
-            border: 1px solid #475569;
-        }
-        .dash-card h4 { margin: 0 0 5px 0; font-size: 11px; color: #94a3b8; text-transform: uppercase; }
-        .dash-card p { margin: 0; font-size: 18px; font-weight: bold; }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-            background: #1e293b;
-            font-size: 13px;
-        }
-        th, td {
-            padding: 10px;
-            text-align: left;
-            border-bottom: 1px solid #334155;
-        }
-        th { background-color: #0f172a; color: #38bdf8; }
-
-        .result-display {
-            background: #1e293b;
-            padding: 12px;
-            border-radius: 6px;
-            margin-top: 10px;
-            border-left: 4px solid #38bdf8;
-            display: none;
-        }
-        .info-row {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 6px;
-            font-size: 15px;
-        }
-        hr { border: 0; border-top: 1px solid #334155; margin: 15px 0; }
+        body { background: #0f172a; color: white; font-family: sans-serif; padding: 15px; margin: 0; }
+        .box { max-width: 650px; margin: 0 auto; background: #1e293b; padding: 15px; border-radius: 15px; border: 1px solid #334155; }
+        button { padding: 12px 15px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; margin: 4px; text-transform: uppercase; }
+        .btn-auto { background: #64748b; color: white; }
+        .btn-andar { background: #2563eb; color: white; border: 2px solid #60a5fa; }
+        .btn-bahar { background: #d97706; color: white; border: 2px solid #fbbf24; }
+        .btn-approve { background: #10b981; color: white; font-size: 11px; border-radius: 4px; padding: 6px 10px; }
+        .btn-reject { background: #ef4444; color: white; font-size: 11px; border-radius: 4px; padding: 6px 10px; }
+        .status-box { background: #020617; padding: 12px; border-radius: 8px; margin: 10px 0; color: #38bdf8; font-size: 14px; text-align: center; }
+        .table-section { background: #0b132b; padding: 12px; border-radius: 8px; margin-top: 15px; text-align: left; border: 1px solid #1e293b; }
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #1e293b; font-size: 13px; }
+        table { width: 100%; border-collapse: collapse; }
         
-        .admin-choice-box {
-            background: rgba(56, 189, 248, 0.1);
-            border: 1px dashed #38bdf8;
-            color: #38bdf8;
-            padding: 12px;
-            border-radius: 8px;
-            font-weight: bold;
-            font-size: 15px;
-            margin-bottom: 15px;
-            text-align: center;
+        /* Search Box Layout */
+        .result-display { background: #1e293b; padding: 12px; border-radius: 6px; margin-top: 10px; display: none; }
+        .info-row { display: flex; justify-content: space-between; margin-bottom: 6px; }
+        input[type="text"], input[type="number"] {
+            padding: 10px; background: #020617; color: white; border: 1px solid #334155; border-radius: 5px; box-sizing: border-box;
         }
     </style>
 </head>
 <body>
 
-<div class="admin-container">
-    <h2>🛠️ ADVANCED MASTER CONTROL PANEL</h2>
-    <p style="text-align:center; color:#64748b; font-size:13px; margin-top:-10px;">Anti-Cheat Hidden Delay Engine</p>
-
-    <div class="live-dash">
-        <div class="dash-card" style="border-left: 4px solid #a855f7;">
-            <h4>👥 Active Bets Count</h4>
-            <p id="totalPlayersCount" style="color: #a855f7;">0</p>
+<div class="box">
+    <h2>🎛️ SUPER SYSTEM CONTROLLER</h2>
+    
+    <div style="display:flex; justify-content:space-between; gap:10px; margin-bottom:10px;">
+        <div style="flex:1; background:#020617; padding:10px; border-radius:8px; text-align:center;">
+            <span style="font-size:11px; color:#94a3b8;">🔵 LIVE ANDAR TOTAL BETS</span>
+            <p id="totAndarBet" style="margin:5px 0; font-size:20px; color:#60a5fa; font-weight:bold;">0 Coins</p>
         </div>
-        <div class="dash-card" style="border-left: 4px solid #3b82f6;">
-            <h4>🔵 Andar Total Coins</h4>
-            <p id="totalAndarPool" style="color: #3b82f6;">0 Coins</p>
-        </div>
-        <div class="dash-card" style="border-left: 4px solid #eab308;">
-            <h4>🟡 Bahar Total Coins</h4>
-            <p id="totalBaharPool" style="color: #eab308;">0 Coins</p>
+        <div style="flex:1; background:#020617; padding:10px; border-radius:8px; text-align:center;">
+            <span style="font-size:11px; color:#94a3b8;">🟡 LIVE BAHAR TOTAL BETS</span>
+            <p id="totBaharBet" style="margin:5px 0; font-size:20px; color:#fbbf24; font-weight:bold;">0 Coins</p>
         </div>
     </div>
 
-    <div id="adminChoiceStatus" class="admin-choice-box">
-        Game Status: Syncing Live Firebase Logs...
+    <div class="status-box">
+        MY CURRENT TARGET SELECTION: <strong id="currTarget" style="font-size:18px; color:#ffbc00; letter-spacing:1px;">LOADING...</strong>
     </div>
 
-    <div class="section-box">
-        <h3>👤 Individual Player Wallet Manager</h3>
-        <label for="searchPlayerId">Enter Player Unique ID:</label>
-        <input type="text" id="searchPlayerId" placeholder="e.g., PLAYER-12345">
-        <button class="btn btn-blue" onclick="searchPlayer()">🔍 SEARCH DETAILS</button>
+    <div class="table-section" style="text-align:center;">
+        <h4 style="margin:0 0 10px 0; color:#38bdf8;">🏆 CHOOSE WINNER OVERRIDE FOR THIS ROUND</h4>
+        <p style="color:#94a3b8; font-size:11px; margin-top:-5px; margin-bottom:10px;">(Hidden Anti-Cheat Delay Active: Clicking a side will handle faked card dealing animation loops natively)</p>
+        <button class="btn-andar" style="width:47%; font-size:15px;" onclick="setForce('andar')">📢 FORCE ANDAR WIN</button>
+        <button class="btn-bahar" style="width:47%; font-size:15px;" onclick="setForce('bahar')">📢 FORCE BAHAR WIN</button>
+        <button class="btn-auto" style="width: 96%; margin-top:8px;" onclick="setForce('auto')">♻️ RESET TO AUTOMATIC LOW-BET</button>
+    </div>
+
+    <div class="table-section">
+        <h4 style="margin:0 0 10px 0; color:#cbd5e1;">👤 PLAYER WALLET AUDITOR</h4>
+        <input type="text" id="searchPlayerId" placeholder="Enter Player Unique ID" style="width:65%;">
+        <button class="btn-andar" style="padding:10px 15px; margin-left:5px; border:none;" onclick="searchPlayer()">🔍 SEARCH ID</button>
 
         <div id="searchResultBox" class="result-display">
-            <div class="info-row"><strong>Player ID:</strong> <span id="resId" style="color:#38bdf8; font-weight:bold;">--</span></div>
-            <div class="info-row"><strong>Coins Balance:</strong> <span id="resCoins" style="color:#4ade80; font-weight:bold;">--</span></div>
-            <div class="info-row"><strong>Bet Side:</strong> <span id="resBetSide" style="color:#ea580c; font-weight:bold;">--</span></div>
-            <div class="info-row"><strong>Bet Amount:</strong> <span id="resBetAmt" style="color:#ea580c; font-weight:bold;">--</span></div>
-            <hr style="border:0; border-top:1px solid #334155;">
-            <label for="modCoinAmt">Enter Amount to Modify:</label>
-            <input type="number" id="modCoinAmt" placeholder="Enter coin value (e.g., 500)">
-            <div class="btn-grid">
-                <button class="btn btn-green" onclick="modifyCoins('add')">➕ ADD COINS</button>
-                <button class="btn btn-red" onclick="modifyCoins('minus')">➖ MINUS COINS</button>
+            <div class="info-row"><span>Unique User ID:</span><span id="resId" style="color:#38bdf8; font-weight:bold;">--</span></div>
+            <div class="info-row"><span>Wallet Balance:</span><span id="resCoins" style="color:#10b981; font-weight:bold;">--</span></div>
+            <div class="info-row"><span>Round Bet Side:</span><span id="resBetSide" style="color:#fbbf24;">--</span></div>
+            <div class="info-row"><span>Round Bet Amount:</span><span id="resBetAmt" style="color:#fbbf24;">--</span></div>
+            <hr style="border:0; border-top:1px solid #334155; margin:10px 0;">
+            <label for="modCoinAmt">Modify Wallet Value:</label>
+            <input type="number" id="modCoinAmt" placeholder="Amount (e.g., 500)" style="width:100%;">
+            <div style="display:flex; gap:10px; margin-top:8px;">
+                <button class="btn-approve" style="flex:1; font-size:14px; padding:10px;" onclick="modifyCoins('add')">➕ ADD COINS</button>
+                <button class="btn-reject" style="flex:1; font-size:14px; padding:10px;" onclick="modifyCoins('minus')">➖ MINUS COINS</button>
             </div>
         </div>
     </div>
 
-    <div class="section-box">
-        <h3>🎮 Timer Control (Round Start)</h3>
-        <label for="timerInput">Set Countdown Time (Seconds):</label>
-        <input type="number" id="timerInput" value="30">
-        <button class="btn btn-green" style="width:100%; font-size:16px;" onclick="startNewBettingRound()">🟢 START NEW GAME ROUND</button>
+    <div class="table-section">
+        <h4 style="margin:5px 0; color:#00f5d4;">📥 DEPOSIT VERIFICATION PANEL</h4>
+        <table>
+            <thead><tr><th>Player ID</th><th>Coins</th><th>UTR Reference</th><th>Actions</th></tr></thead>
+            <tbody id="depositBody"><tr><td colspan="4">No Pending Requests</td></tr></tbody>
+        </table>
     </div>
 
-    <div class="section-box">
-        <h3>🏆 Safe Admin Choice (Hidden 7-Sec Delay)</h3>
-        <div class="btn-grid">
-            <button class="btn btn-blue" style="font-size:16px;" onclick="queueAdminWinner('andar')">🔵 SAFE CHOOSE ANDAR</button>
-            <button class="btn btn-orange" style="font-size:16px;" onclick="queueAdminWinner('bahar')">🟡 SAFE CHOOSE BAHAR</button>
-        </div>
-    </div>
-
-    <div class="section-box">
-        <h3>💳 Live Transaction Requests (Logs Only)</h3>
-        
-        <h4 style="color:#4ade80; margin-bottom:5px;">📥 Deposit Requests (Check Player ID & Add Coins Manually Above)</h4>
-        <div style="overflow-x:auto;">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Player ID</th>
-                        <th>Amount</th>
-                        <th>UTR / Ref ID</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody id="depositTableBody">
-                    <tr><td colspan="4" style="text-align:center; color:#64748b;">No pending deposits</td></tr>
-                </tbody>
-            </table>
-        </div>
-
-        <h4 style="color:#f87171; margin-top:20px; margin-bottom:5px;">📤 Withdrawal Requests (Logs Management)</h4>
-        <div style="overflow-x:auto;">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Player ID</th>
-                        <th>Amount</th>
-                        <th>UPI Target ID</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody id="withdrawTableBody">
-                    <tr><td colspan="4" style="text-align:center; color:#64748b;">No pending withdrawals</td></tr>
-                </tbody>
-            </table>
-        </div>
+    <div class="table-section">
+        <h4 style="margin:5px 0; color:#ff5c5c;">📤 WITHDRAWAL SYSTEM REQUESTS</h4>
+        <table>
+            <thead><tr><th>Player ID</th><th>Coins</th><th>UPI Target ID</th><th>Actions</th></tr></thead>
+            <tbody id="withdrawBody"><tr><td colspan="4">No Pending Requests</td></tr></tbody>
+        </table>
     </div>
 </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-    import { getDatabase, ref, get, update, set, increment, push, onValue, remove } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+    import { getDatabase, ref, set, update, onValue, remove, get, increment } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
     const firebaseConfig = { databaseURL: "https://my-first-app-cad29-default-rtdb.firebaseio.com" };
     const app = initializeApp(firebaseConfig);
     const database = getDatabase(app);
 
     let activeSearchedId = null;
-    let countdownInterval = null;
-    let globalTimerSeconds = 0;
-    let currentAndarPool = 0;
-    let currentBaharPool = 0;
-    let isRoundProcessing = false;
 
-    // ==========================================
-    // FIXED: LIVE TOTAL POOL COUNTERS
-    // ==========================================
-    onValue(ref(database, 'players'), (snapshot) => {
-        let totalAndar = 0;
-        let totalBahar = 0;
-        let uniqueBetsCount = 0;
-        
+    // Admin target status sync handler
+    onValue(ref(database, "game/forcedWinner"), (snapshot) => {
+        let val = snapshot.exists() ? snapshot.val().toUpperCase() : "AUTO (LOW-BET)";
+        if(val === "AUTO") val = "AUTO (LOW-BET)";
+        document.getElementById("currTarget").innerText = val;
+    });
+
+    // Realtime Side Total Bets Accumulator logic fix
+    onValue(ref(database, "players"), (snapshot) => {
+        let tAndar = 0; let tBahar = 0;
         if(snapshot.exists()) {
-            const playersData = snapshot.val();
-            Object.values(playersData).forEach(player => {
-                if(player.currentBet && player.currentBet.amount) {
-                    uniqueBetsCount++;
-                    let amt = parseInt(player.currentBet.amount) || 0;
-                    if(player.currentBet.side === 'andar') totalAndar += amt;
-                    if(player.currentBet.side === 'bahar') totalBahar += amt;
+            Object.values(snapshot.val()).forEach(p => {
+                if(p.currentBet && p.currentBet.amount) {
+                    if(p.currentBet.side === "andar") tAndar += parseInt(p.currentBet.amount) || 0;
+                    if(p.currentBet.side === "bahar") tBahar += parseInt(p.currentBet.amount) || 0;
                 }
             });
         }
-        currentAndarPool = totalAndar;
-        currentBaharPool = totalBahar;
-
-        document.getElementById('totalPlayersCount').innerText = uniqueBetsCount;
-        document.getElementById('totalAndarPool').innerText = totalAndar + " Coins";
-        document.getElementById('totalBaharPool').innerText = totalBahar + " Coins";
+        document.getElementById("totAndarBet").innerText = tAndar + " Coins";
+        document.getElementById("totBaharBet").innerText = tBahar + " Coins";
     });
 
-    onValue(ref(database, 'game'), (snapshot) => {
-        if(snapshot.exists()) {
-            const gameData = snapshot.val();
-            if(gameData.status === "betting") {
-                document.getElementById('adminChoiceStatus').innerHTML = `⏳ Betting Active... Time Left: <span style="color:#4ade80;font-weight:bold;">${gameData.time}s</span>`;
-            } else if(gameData.status === "dealing") {
-                document.getElementById('adminChoiceStatus').innerHTML = `🎰 <span style="color:#eab308;">Dealing Cards... Syncing Dynamic Anti-Cheat Delay...</span>`;
-            } else if(gameData.status === "ended") {
-                document.getElementById('adminChoiceStatus').innerHTML = `📢 Round Closed! Winner: <span style="text-transform: uppercase; color:#ffbc00;">${gameData.winner}</span>`;
-            }
-        }
-    });
+    window.setForce = function(mode) { set(ref(database, "game/forcedWinner"), mode); }
 
-    // ==========================================
-    // GAME ENGINE & TIMER CONTROL
-    // ==========================================
-    window.startNewBettingRound = function() {
-        clearInterval(countdownInterval);
-        isRoundProcessing = false;
-        
-        globalTimerSeconds = parseInt(document.getElementById('timerInput').value) || 30;
-        update(ref(database, 'game'), { status: "betting", time: globalTimerSeconds, winner: null, andarCards: null, baharCards: null });
-
-        countdownInterval = setInterval(() => {
-            globalTimerSeconds--;
-            if(globalTimerSeconds <= 0) {
-                clearInterval(countdownInterval);
-                if(!isRoundProcessing) {
-                    processStrictLowBetWinner();
-                }
-            } else {
-                update(ref(database, 'game'), { time: globalTimerSeconds });
-            }
-        }, 1000);
-    }
-
-    function processStrictLowBetWinner() {
-        if(isRoundProcessing) return;
-        isRoundProcessing = true;
-
-        update(ref(database, 'game'), { status: "dealing", time: 0 });
-
-        let strictWinner = "andar";
-        if(currentAndarPool > currentBaharPool) {
-            strictWinner = "bahar";
-        } else if(currentBaharPool > currentAndarPool) {
-            strictWinner = "andar";
-        } else {
-            strictWinner = Math.random() < 0.5 ? "andar" : "bahar";
-        }
-
-        setTimeout(() => {
-            executePayoutLoop(strictWinner);
-        }, 7000);
-    }
-
-    window.queueAdminWinner = function(chosenSide) {
-        if(isRoundProcessing) return alert("Round is already ending!");
-        clearInterval(countdownInterval);
-        isRoundProcessing = true;
-
-        update(ref(database, 'game'), { status: "dealing", time: 0 });
-
-        setTimeout(() => {
-            executePayoutLoop(chosenSide);
-        }, 7000);
-    }
-
-    function executePayoutLoop(finalWinner) {
-        update(ref(database, 'game'), { status: "ended", winner: finalWinner });
-        push(ref(database, 'game/historyList'), finalWinner);
-
-        get(ref(database, 'players')).then((snapshot) => {
-            if(snapshot.exists()) {
-                const allPlayers = snapshot.val();
-                Object.keys(allPlayers).forEach((id) => {
-                    const p = allPlayers[id];
-                    if(p.currentBet) {
-                        if(p.currentBet.side === finalWinner) {
-                            let winMultiplier = (parseInt(p.currentBet.amount) || 0) * 2;
-                            update(ref(database, 'players/' + id), { coins: increment(winMultiplier), currentBet: null });
-                        } else {
-                            update(ref(database, 'players/' + id), { currentBet: null });
-                        }
-                    }
-                });
-            }
-            setTimeout(() => {
-                startNewBettingRound();
-            }, 5000);
-        });
-    }
-
-    // ==========================================
-    // FIXED: IN SYNC WITH INDEX.HTML FIREBASE SCHEMA
-    // ==========================================
+    // Synchronize Real-time Database tree logs to view components
     onValue(ref(database, 'requests/deposits'), (snapshot) => {
-        const depTable = document.getElementById('depositTableBody');
-        depTable.innerHTML = "";
+        const body = document.getElementById('depositBody'); body.innerHTML = "";
         if(snapshot.exists()) {
             Object.entries(snapshot.val()).forEach(([key, req]) => {
-                depTable.innerHTML += `
-                    <tr>
-                        <td><strong>${req.userId}</strong></td>
-                        <td style="color:#4ade80;font-weight:bold;">${req.amount}</td>
-                        <td>${req.utr || 'N/A'}</td>
-                        <td>
-                            <button class="btn btn-green" style="padding:5px 8px; font-size:11px;" onclick="clearRequest('deposits','${key}','Accepted')">✓ Clear Request</button>
-                            <button class="btn btn-red" style="padding:5px 8px; font-size:11px; margin-left:3px;" onclick="clearRequest('deposits','${key}','Rejected')">✗ Reject</button>
-                        </td>
-                    </tr>`;
+                body.innerHTML += `<tr><td><strong>${req.userId}</strong></td><td>${req.amount}</td><td>${req.utr}</td>
+                <td><button class="btn-approve" onclick="clearRequestNode('deposits','${key}')">✓ Clear Log</button>
+                <button class="btn-reject" onclick="clearRequestNode('deposits','${key}')">✗ Reject</button></td></tr>`;
             });
-        } else {
-            depTable.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#64748b;">No pending deposits</td></tr>`;
-        }
+        } else { body.innerHTML = "<tr><td colspan='4'>No Pending Requests</td></tr>"; }
     });
 
     onValue(ref(database, 'requests/withdraws'), (snapshot) => {
-        const witTable = document.getElementById('withdrawTableBody');
-        witTable.innerHTML = "";
+        const body = document.getElementById('withdrawBody'); body.innerHTML = "";
         if(snapshot.exists()) {
             Object.entries(snapshot.val()).forEach(([key, req]) => {
-                witTable.innerHTML += `
-                    <tr>
-                        <td><strong>${req.userId}</strong></td>
-                        <td style="color:#f87171;font-weight:bold;">${req.amount}</td>
-                        <td>${req.upiId || 'N/A'}</td>
-                        <td>
-                            <button class="btn btn-green" style="padding:5px 8px; font-size:11px;" onclick="clearRequest('withdraws','${key}','Disbursed')">✓ Clear Log</button>
-                            <button class="btn btn-red" style="padding:5px 8px; font-size:11px; margin-left:3px;" onclick="clearRequest('withdraws','${key}','Rejected')">✗ Clear Log</button>
-                        </td>
-                    </tr>`;
+                body.innerHTML += `<tr><td><strong>${req.userId}</strong></td><td>${req.amount}</td><td>${req.upiId}</td>
+                <td><button class="btn-approve" onclick="clearRequestNode('withdraws','${key}')">✓ Clear Log</button>
+                <button class="btn-reject" onclick="clearRequestNode('withdraws','${key}')">✗ Clear Log</button></td></tr>`;
             });
-        } else {
-            witTable.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#64748b;">No pending withdrawals</td></tr>`;
-        }
+        } else { body.innerHTML = "<tr><td colspan='4'>No Pending Requests</td></tr>"; }
     });
 
-    // Purely clears the request from list logs without modifying user wallet node directly
-    window.clearRequest = function(treeNode, key, statusMessage) {
-        remove(ref(database, `requests/${treeNode}/${key}`)).then(() => {
-            alert(`Log Request marked as ${statusMessage} and wiped out from panel.`);
-        });
+    window.clearRequestNode = function(node, key) { 
+        remove(ref(database, `requests/${node}/${key}`)).then(() => {
+            alert("Transaction notification cleared from master lists.");
+        }); 
     }
 
-    // ==========================================
-    // 👤 PLAYER SEARCH ENGINE (MANUAL WALLET EDIT)
-    // ==========================================
+    // Individual Account Data Lookup Engine
     window.searchPlayer = function() {
         const id = document.getElementById('searchPlayerId').value.trim();
-        if(!id) return alert("Enter Player ID");
+        if(!id) return alert("Please enter a valid Player unique identity token ID!");
         get(ref(database, 'players/' + id)).then(snap => {
             if(snap.exists()) {
-                activeSearchedId = id;
-                const d = snap.val();
+                activeSearchedId = id; const d = snap.val();
                 document.getElementById('resId').innerText = id;
-                document.getElementById('resCoins').innerText = d.coins || 0;
-                document.getElementById('resBetSide').innerText = d.currentBet ? d.currentBet.side.toUpperCase() : "None";
-                document.getElementById('resBetAmt').innerText = d.currentBet ? d.currentBet.amount : "0";
+                document.getElementById('resCoins').innerText = (d.coins !== undefined) ? d.coins + " Coins" : "0 Coins";
+                document.getElementById('resBetSide').innerText = d.currentBet ? d.currentBet.side.toUpperCase() : "No Active Bet";
+                document.getElementById('resBetAmt').innerText = d.currentBet ? d.currentBet.amount + " Coins" : "0 Coins";
                 document.getElementById('searchResultBox').style.display = "block";
-            } else {
-                alert("Invalid Player ID! No such user exists.");
-            }
+            } else { alert("Player ID not registered inside Database!"); }
         });
     }
 
     window.modifyCoins = function(type) {
         let val = parseInt(document.getElementById('modCoinAmt').value);
-        if(!activeSearchedId || isNaN(val) || val <= 0) return alert("Please load user details & enter a valid positive number!");
+        if(!activeSearchedId || isNaN(val) || val <= 0) return alert("Invalid entry, please load profile metrics!");
         if(type === 'minus') val = -val;
         
         update(ref(database, 'players/' + activeSearchedId), { coins: increment(val) }).then(() => {
-            alert("Wallet modified successfully by Admin!");
-            document.getElementById('modCoinAmt').value = '';
+            alert("Player portfolio balances altered securely!"); 
+            document.getElementById('modCoinAmt').value = ''; 
             searchPlayer();
         });
     }

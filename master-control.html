@@ -13,7 +13,7 @@
             padding: 20px;
         }
         .admin-container {
-            max-width: 600px;
+            max-width: 650px;
             margin: 0 auto;
             background: #1e293b;
             padding: 20px;
@@ -31,7 +31,7 @@
             padding: 15px;
             border-radius: 10px;
             margin-bottom: 20px;
-            border: 1px solid #1e293b;
+            border: 1px solid #334155;
         }
         label {
             display: block;
@@ -39,8 +39,9 @@
             color: #94a3b8;
             margin-bottom: 5px;
             text-align: left;
+            font-weight: bold;
         }
-        input[type="text"], input[type="number"] {
+        input[type="text"], input[type="number"], select {
             width: 100%;
             padding: 10px;
             font-size: 16px;
@@ -51,21 +52,28 @@
             box-sizing: border-box;
             margin-bottom: 12px;
         }
+        .btn-grid {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
         .btn {
-            width: 100%;
+            flex: 1;
             padding: 12px;
-            font-size: 16px;
+            font-size: 15px;
             font-weight: bold;
             border: none;
             border-radius: 8px;
             cursor: pointer;
-            transition: background 0.2s;
+            transition: background 0.2s, opacity 0.2s;
         }
+        .btn:active { opacity: 0.8; }
         .btn-blue { background: #0284c7; color: white; }
-        .btn-blue:hover { background: #0369a1; }
         .btn-green { background: #16a34a; color: white; }
-        .btn-green:hover { background: #15803d; }
-        
+        .btn-red { background: #dc2626; color: white; }
+        .btn-orange { background: #ea580c; color: white; }
+        .btn-purple { background: #7c3aed; color: white; }
+
         .result-display {
             background: #1e293b;
             padding: 12px;
@@ -82,31 +90,31 @@
             font-size: 15px;
         }
         .highlight { color: #4ade80; font-weight: bold; }
+        hr { border: 0; border-top: 1px solid #334155; margin: 15px 0; }
     </style>
 </head>
 <body>
 
 <div class="admin-container">
     <h2>🛠️ MASTER CONTROL PANEL</h2>
-    <p style="text-align:center; color:#64748b; font-size:13px; margin-top:-10px;">Game Engine & Player Manager</p>
+    <p style="text-align:center; color:#64748b; font-size:13px; margin-top:-10px;">Full Game Admin & Player Control Suite</p>
 
-    <!-- 🔥 NEW MODULE: PLAYER ID SEARCH & COIN MANAGEMENT -->
+    <!-- 🔥 MODULE 1: PLAYER ID SEARCH & COIN ADD/MINUS -->
     <div class="section-box">
-        <h3>👤 Player Management</h3>
+        <h3>👤 Player Management (Search & Edit Coins)</h3>
         
-        <!-- Step 1: Search Player -->
         <label for="searchPlayerId">Enter Player Unique ID:</label>
         <input type="text" id="searchPlayerId" placeholder="e.g., PLAYER-12345">
-        <button class="btn btn-blue" onclick="searchPlayer()">🔍 CHECK PLAYER DETAILS</button>
+        <button class="btn btn-blue" onclick="searchPlayer()">🔍 SEARCH PLAYER DETAILS</button>
 
-        <!-- Live Details Result Box -->
+        <!-- Live Metrics Dynamic Data Display -->
         <div id="searchResultBox" class="result-display">
             <div class="info-row">
-                <span>Player ID:</span>
+                <span>Player Unique ID:</span>
                 <span id="resId" style="color:#38bdf8; font-weight:bold;">--</span>
             </div>
             <div class="info-row">
-                <span>Current Coins:</span>
+                <span>Current Coins Balance:</span>
                 <span id="resCoins" class="highlight">--</span>
             </div>
             <div class="info-row">
@@ -118,44 +126,83 @@
                 <span id="resBetAmt" style="color:#f59e0b;">--</span>
             </div>
             
-            <hr style="border:0; border-top:1px solid #334155; margin:12px 0;">
+            <hr>
             
-            <!-- Step 2: Add Coins to this searched Player -->
-            <label for="modCoinAmt">Add / Remove Coins (Use minus sign '-' to remove):</label>
-            <input type="number" id="modCoinAmt" placeholder="e.g., 500 or -200">
-            <button class="btn btn-green" onclick="updatePlayerCoins()">💰 UPDATE COINS BALANCE</button>
+            <!-- Coin Action Operations -->
+            <label for="modCoinAmt">Enter Coins Amount to Add or Minus:</label>
+            <input type="number" id="modCoinAmt" placeholder="e.g., 500 to Add | -200 to Minus">
+            
+            <div class="btn-grid">
+                <button class="btn btn-green" onclick="modifyCoins('add')">➕ ADD COINS</button>
+                <button class="btn btn-red" onclick="modifyCoins('minus')">➖ MINUS COINS</button>
+            </div>
         </div>
     </div>
 
-    <!-- Note: Apne purane system configurations (Timer, Joker controls) ko aap iske niche jod sakte hain -->
+    <!-- 🎮 MODULE 2: GAME TIMER & STATUS CONTROLS -->
+    <div class="section-box">
+        <h3>🎮 Game Phase Controls</h3>
+        
+        <label for="timerInput">Set Betting Timer (Seconds):</label>
+        <input type="number" id="timerInput" value="30">
+        
+        <div class="btn-grid">
+            <button class="btn btn-green" onclick="controlGame('start Betting')">🟢 START BETTING TIME</button>
+            <button class="btn btn-orange" onclick="controlGame('stop Betting')">🛑 STOP BETTING</button>
+        </div>
+    </div>
+
+    <!-- 🃏 MODULE 3: JOKER CARD & RESULT CONTROLS -->
+    <div class="section-box">
+        <h3>🃏 Card & Winner Declarations</h3>
+        
+        <div class="btn-grid">
+            <input type="text" id="jokerRank" placeholder="Rank (A, 2, K, Q)" style="margin-bottom:0; flex:1;">
+            <select id="jokerSuit" style="margin-bottom:0; flex:1;">
+                <option value="♠">♠ Spades</option>
+                <option value="♥">♥ Hearts</option>
+                <option value="♦">♦ Diamonds</option>
+                <option value="♣">♣ Clubs</option>
+            </select>
+            <button class="btn btn-purple" onclick="setJokerCard()" style="flex:1;">🃏 SET JOKER</button>
+        </div>
+        
+        <hr>
+        
+        <label>Declare Round Winner Manual Switch:</label>
+        <div class="btn-grid">
+            <button class="btn btn-blue" onclick="declareWinner('andar')">🔵 ANDAR WINS</button>
+            <button class="btn btn-orange" onclick="declareWinner('bahar')">🟡 BAHAR WINS</button>
+        </div>
+        <button class="btn btn-red" onclick="resetGameRound()" style="width:100%; margin-top:5px;">🔄 RESET ROUND FOR NEXT GAME</button>
+    </div>
 </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-    import { getDatabase, ref, get, update, increment } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+    import { getDatabase, ref, get, update, set, increment, push } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
-    // Same configuration linked with your DB
     const firebaseConfig = { databaseURL: "https://my-first-app-cad29-default-rtdb.firebaseio.com" };
     const app = initializeApp(firebaseConfig);
     const database = getDatabase(app);
 
-    let activeSearchedId = null; // Track karne ke liye ki kis player par management chal raha hai
+    let activeSearchedId = null;
+    let countdownInterval = null;
 
-    // 1. UNIQUE ID SE SEARCH KARNE KA LOGIC
+    // ==========================================
+    // 👤 FUNCTIONALITY 1: PLAYER COIN ENGINE
+    // ==========================================
     window.searchPlayer = function() {
         const pIdInput = document.getElementById('searchPlayerId').value.trim();
         if(!pIdInput) return alert("Please enter a valid Player ID!");
 
-        const playerRef = ref(database, 'players/' + pIdInput);
-
-        get(playerRef).then((snapshot) => {
+        get(ref(database, 'players/' + pIdInput)).then((snapshot) => {
             if(snapshot.exists()) {
                 const pData = snapshot.val();
-                activeSearchedId = pIdInput; // lock active target
+                activeSearchedId = pIdInput; 
 
-                // Data mapping to admin UI elements
                 document.getElementById('resId').innerText = pIdInput;
-                document.getElementById('resCoins').innerText = pData.coins !== undefined ? pData.coins + " Coins" : "0 Coins";
+                document.getElementById('resCoins').innerText = (pData.coins !== undefined) ? pData.coins + " Coins" : "0 Coins";
                 
                 if(pData.currentBet) {
                     document.getElementById('resBetSide').innerText = (pData.currentBet.side).toUpperCase();
@@ -165,38 +212,135 @@
                     document.getElementById('resBetAmt').innerText = "0 Coins";
                 }
 
-                // Show the visual section layout
                 document.getElementById('searchResultBox').style.display = 'block';
             } else {
                 document.getElementById('searchResultBox').style.display = 'none';
                 activeSearchedId = null;
                 alert("Player ID not found in Database!");
             }
-        }).catch((err) => {
-            console.error(err);
-            alert("Database tracking failed.");
         });
     }
 
-    // 2. COINS ADD / REMOVE KARNE KA LOGIC (Using Atomic Increment Sync)
-    window.updatePlayerCoins = function() {
-        if(!activeSearchedId) return alert("No active player selected to update!");
+    window.modifyCoins = function(actionType) {
+        if(!activeSearchedId) return alert("Please search and load a player profile first!");
         
-        let coinModInput = parseInt(document.getElementById('modCoinAmt').value);
-        if(isNaN(coinModInput) || coinModInput === 0) return alert("Please enter a valid coin value!");
+        let coinValue = parseInt(document.getElementById('modCoinAmt').value);
+        if(isNaN(coinValue) || coinValue <= 0) return alert("Please enter a valid positive coin number!");
 
-        const targetPlayerRef = ref(database, 'players/' + activeSearchedId);
+        // Agar minus click hua toh mathematical inversion value logic apply hoga
+        if(actionType === 'minus') {
+            coinValue = -coinValue; 
+        }
 
-        // Firebase atomic operation se direct existing coin value me add (+) ya minus (-) karega
-        update(targetPlayerRef, {
-            coins: increment(coinModInput)
+        const playerCoinsRef = ref(database, 'players/' + activeSearchedId);
+
+        update(playerCoinsRef, {
+            coins: increment(coinValue)
         }).then(() => {
-            alert(`Successfully updated coins for ${activeSearchedId}!`);
-            document.getElementById('modCoinAmt').value = ''; // clean input field
-            searchPlayer(); // refresh data metrics on view box
-        }).catch((err) => {
-            alert("Failed to modify coins balance.");
+            alert(`Balance successfully updated via Master Controller!`);
+            document.getElementById('modCoinAmt').value = '';
+            searchPlayer(); // Stats automatic recalculate call
+        }).catch(() => {
+            alert("Error managing player wallet data node.");
         });
+    }
+
+    // ==========================================
+    // 🎮 FUNCTIONALITY 2: GAME CYCLE ENGINE
+    // ==========================================
+    window.controlGame = function(action) {
+        clearInterval(countdownInterval);
+        const gameRef = ref(database, 'game');
+
+        if(action === 'start Betting') {
+            let timeSec = parseInt(document.getElementById('timerInput').value) || 30;
+            
+            update(gameRef, { status: "betting", time: timeSec, winner: null, andarCards: null, baharCards: null });
+            
+            countdownInterval = setInterval(() => {
+                timeSec--;
+                if(timeSec <= 0) {
+                    clearInterval(countdownInterval);
+                    update(gameRef, { status: "dealing", time: 0 });
+                } else {
+                    update(gameRef, { time: timeSec });
+                }
+            }, 1000);
+            alert("Betting timer triggered live!");
+        } 
+        else if(action === 'stop Betting') {
+            update(gameRef, { status: "dealing", time: 0 });
+            alert("Betting phase locked down globally.");
+        }
+    }
+
+    window.setJokerCard = function() {
+        const rank = document.getElementById('jokerRank').value.trim().toUpperCase();
+        const suit = document.getElementById('jokerSuit').value;
+        if(!rank) return alert("Enter card rank digit first!");
+
+        update(ref(database, 'game'), {
+            joker: { rank: rank, suit: suit }
+        });
+        alert(`Joker card locked to: ${rank}${suit}`);
+    }
+
+    // ==========================================
+    // 🎉 FUNCTIONALITY 3: WIN DISTRIBUTION ENGINE
+    // ==========================================
+    window.declareWinner = function(winningSide) {
+        const gameRef = ref(database, 'game');
+        
+        // 1. Game node status winner update freeze kardo
+        update(gameRef, { status: "ended", winner: winningSide });
+
+        // History logs push update setup
+        push(ref(database, 'game/historyList'), winningSide);
+
+        // 2. Pure database me look karke automatic players data check karo loop payout balance ke liye
+        get(ref(database, 'players')).then((snapshot) => {
+            if(snapshot.exists()) {
+                const allPlayers = snapshot.val();
+                
+                Object.keys(allPlayers).forEach((playerId) => {
+                    const playerData = allPlayers[playerId];
+                    
+                    // Agar player ki absolute total stacked bet right format me exist karti hai
+                    if(playerData.currentBet && playerData.currentBet.side === winningSide) {
+                        let betPoolAmount = parseInt(playerData.currentBet.amount) || 0;
+                        let netPayoutTotal = betPoolAmount * 2; // Real Double Multiplier (40 x 2 = 80)
+
+                        // Winning user allocation safe increment balance payload
+                        update(ref(database, 'players/' + playerId), {
+                            coins: increment(netPayoutTotal)
+                        });
+                    }
+                });
+                alert(`Winner ${winningSide.toUpperCase()} successfully published. Payout loop credit completed!`);
+            }
+        });
+    }
+
+    window.resetGameRound = function() {
+        // Safe clear dynamic bets state logs for next loop processing
+        get(ref(database, 'players')).then((snapshot) => {
+            if(snapshot.exists()) {
+                const allPlayers = snapshot.val();
+                Object.keys(allPlayers).forEach((id) => {
+                    update(ref(database, 'players/' + id), { currentBet: null });
+                });
+            }
+        });
+
+        set(ref(database, 'game'), {
+            status: "betting",
+            time: 30,
+            joker: null,
+            winner: null,
+            andarCards: null,
+            baharCards: null
+        });
+        alert("Board and all active bets reset for new clean session!");
     }
 </script>
 </body>

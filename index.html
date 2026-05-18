@@ -142,6 +142,7 @@
     }
     document.getElementById("displayPlayerId").innerText = myId;
 
+    // GLOBAL JAVASCRIPT STATE VARIABLES (For instant calculations without network delay)
     let myCoins = 0;
     let selectedSide = "andar";
     let isBettingOpen = false;
@@ -152,22 +153,24 @@
         if(snapshot.exists()) { document.getElementById('liveUpiDisplay').innerText = snapshot.val().upi || "admin@upi"; }
     });
 
+    // Pehle se lagi hui bet aur coins ko track karne ke liye standard data listener
     onValue(ref(database, 'players/' + myId), (snapshot) => {
         if(snapshot.exists()) {
             const pData = snapshot.val();
-            myCoins = pData.coins || 0;
+            myCoins = parseInt(pData.coins) || 0;
             document.getElementById('topCoins').innerText = myCoins;
             
             if(pData.currentBet) {
                 existingBetSide = pData.currentBet.side;
                 existingBetAmount = parseInt(pData.currentBet.amount) || 0;
                 
-                // LIVE UI UPDATE: Screen par direct dono jud kar hi dikhega hamesha
+                // Screen display logic setup
                 document.getElementById('betDisplay').innerText = `${existingBetAmount} (${existingBetSide.toUpperCase()})`;
                 document.getElementById('confirmMsg').innerText = `Total Bet Active: ${existingBetAmount} Coins on ${existingBetSide.toUpperCase()}`;
                 
                 window.selectSide(existingBetSide);
             } else {
+                // Round khatam hone par sab variables automatic clean ho jayenge
                 document.getElementById('betDisplay').innerText = "0";
                 document.getElementById('confirmMsg').innerText = "";
                 existingBetSide = null;
@@ -212,7 +215,6 @@
 
             if(gameData.status === "ended" && gameData.winner) {
                 document.getElementById('gameStatus').innerText = `${gameData.winner.toUpperCase()} WINS! 🎉`;
-                
                 if(gameData.winner === 'andar') {
                     document.getElementById('andarBox').classList.add('winner-glow');
                 } else if(gameData.winner === 'bahar') {
@@ -251,6 +253,7 @@
         document.getElementById('baharBtn').className = (side === 'bahar' ? 'btn-bet activeBtn' : 'btn-bet');
     }
 
+    // 🔥 INSTANT UI ENGINE SYNC PROCESSOR (Yeh logic bina refresh ke automatic calculation fix karega)
     window.placeBet = function() {
         if(!isBettingOpen) return alert("Betting is Closed right now!");
         
@@ -258,23 +261,26 @@
         if (newAmtInput <= 0 || isNaN(newAmtInput)) return alert("Please enter a valid bet amount!");
         if (newAmtInput > myCoins) return alert("Insufficient balance!");
 
-        // FIXED CRITICAL LOGIC: Purane live balance se plus karke calculation ko fix kiya gaya hai
-        let totalUpdatedBetAmount = existingBetAmount + newAmtInput;
-        
-        // Pehle locals ko force update kiya taaki latency issues na aayein
+        // 1. Pehle pure mathematical balance ko local variables me plus-minus kiya
+        let finalCalculatedBetTotal = existingBetAmount + newAmtInput;
+        let finalCoinsLeft = myCoins - newAmtInput;
+
+        // 2. CRITICAL STEP: Firebase database ki latency wait kiye bina, UI state ko turant update kiya
         existingBetSide = selectedSide;
-        existingBetAmount = totalUpdatedBetAmount;
+        existingBetAmount = finalCalculatedBetTotal;
+        myCoins = finalCoinsLeft;
 
-        // UI ko bina kisi network delay ke instantly render kiya
-        document.getElementById('betDisplay').innerText = `${totalUpdatedBetAmount} (${selectedSide.toUpperCase()})`;
-        document.getElementById('confirmMsg').innerText = `Total Bet Active: ${totalUpdatedBetAmount} Coins on ${selectedSide.toUpperCase()}`;
+        // 3. Screen Text blocks ko instant mathematical value render kiye (50 + 40 = 90 Instant Output)
+        document.getElementById('topCoins').innerText = finalCoinsLeft;
+        document.getElementById('betDisplay').innerText = `${finalCalculatedBetTotal} (${selectedSide.toUpperCase()})`;
+        document.getElementById('confirmMsg').innerText = `Total Bet Active: ${finalCalculatedBetTotal} Coins on ${selectedSide.toUpperCase()}`;
 
-        // Database me safe transactional update push kiya
+        // 4. Sab setting save hone ke baad Firebase Database ko async order push kiya 
         update(ref(database, 'players/' + myId), { 
-            coins: myCoins - newAmtInput, 
+            coins: finalCoinsLeft, 
             currentBet: { 
                 side: selectedSide, 
-                amount: totalUpdatedBetAmount 
+                amount: finalCalculatedBetTotal 
             } 
         });
     }

@@ -2,22 +2,55 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Anti-Zoom: user-scalable=no lagane se mobile zoom bilkul band ho jayega -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Andar Bahar Casino Club</title>
     <style>
-        body { background-color: #0b132b; color: white; font-family: sans-serif; margin: 0; padding: 10px; text-align: center; -webkit-user-select: none; user-select: none; }
+        body { 
+            background-color: #0b132b; 
+            color: white; 
+            font-family: sans-serif; 
+            margin: 0; 
+            padding: 10px; 
+            text-align: center; 
+            -webkit-user-select: none; 
+            user-select: none;
+            /* Touch actions ko control karke double-tap zoom block kiya */
+            touch-action: manipulation; 
+        }
         .container { max-width: 480px; margin: 0 auto; background: #1c2541; padding: 15px; border-radius: 20px; box-shadow: 0px 10px 30px rgba(0,0,0,0.7); border: 1px solid #3a506b; }
         .header-box { background: #222e50; padding: 12px; border-radius: 15px; margin-bottom: 15px; border: 1px solid #3a506b; }
         .accent-text { color: #ffbc00; font-weight: bold; }
         .coins-text { color: #00f5d4; font-weight: bold; }
         .time-text { color: #ff5c5c; font-weight: bold; font-size: 18px; }
         .joker-area { margin: 15px 0; min-height: 170px; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 12px; }
+        
         .card { display: inline-block; width: 85px; height: 125px; background: #ffffff; color: #000000; border-radius: 10px; padding: 8px; box-sizing: border-box; position: relative; font-weight: bold; font-size: 20px; box-shadow: 0 6px 12px rgba(0,0,0,0.4); margin: 5px; }
         .card.red { color: #e63946; }
         .card.black { color: #1d3557; }
         .card .suit-center { font-size: 34px; position: absolute; top: 55%; left: 50%; transform: translate(-50%, -50%); }
+        
         .board { display: flex; justify-content: space-between; margin: 15px 0; }
-        .side-box { width: 48%; background: #0b132b; padding: 10px; border-radius: 12px; min-height: 180px; border: 1px solid #3a506b; box-sizing: border-box; }
+        
+        /* Side boxes with smooth transition for the green glow effect */
+        .side-box { 
+            width: 48%; 
+            background: #0b132b; 
+            padding: 10px; 
+            border-radius: 12px; 
+            min-height: 180px; 
+            border: 1px solid #3a506b; 
+            box-sizing: border-box;
+            transition: all 0.4s ease-in-out;
+        }
+        
+        /* Green Glow Lights for Winners */
+        .side-box.winner-glow {
+            border-color: #10b981 !important;
+            background: #064e3b !important;
+            box-shadow: 0 0 20px #10b981;
+        }
+
         .card-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 5px; margin-top: 10px; }
         .btn-bet { background: #1e293b; color: white; border: 2px solid #3a506b; padding: 12px; font-size: 15px; font-weight: bold; border-radius: 10px; cursor: pointer; margin: 5px; width: 44%; }
         .btn-bet.activeBtn { background: #00b4d8; border-color: #00f5d4; box-shadow: 0 0 15px #00b4d8; }
@@ -56,11 +89,12 @@
     </div>
 
     <div class="board">
-        <div class="side-box">
+        <!-- Id add kiye taaki green light handle ho sake -->
+        <div class="side-box" id="andarBox">
             <h4 style="margin:0; color:#3b82f6; font-size:15px;">ANDAR</h4>
             <div class="card-container" id="andarCards"></div>
         </div>
-        <div class="side-box">
+        <div class="side-box" id="baharBox">
             <h4 style="margin:0; color:#eab308; font-size:15px;">BAHAR</h4>
             <div class="card-container" id="baharCards"></div>
         </div>
@@ -134,7 +168,8 @@
                 document.getElementById('betDisplay').innerText = "0";
             }
         } else {
-            set(ref(database, 'players/' + myId), { coins: 500, currentBet: null });
+            // WELCOME BONUS FIX: Ab new player ke aate hi usko 50 coins milenge
+            set(ref(database, 'players/' + myId), { coins: 50, currentBet: null });
         }
     });
 
@@ -149,6 +184,10 @@
                 document.getElementById('gameStatus').innerText = "Place Your Bets Now!";
                 document.getElementById('andarCards').innerHTML = '';
                 document.getElementById('baharCards').innerHTML = '';
+                
+                // Naya round shuru hote hi purani green lights off karein
+                document.getElementById('andarBox').classList.remove('winner-glow');
+                document.getElementById('baharBox').classList.remove('winner-glow');
             } else {
                 isBettingOpen = false;
                 document.getElementById('mainSubmitBtn').style.opacity = "0.5";
@@ -167,13 +206,21 @@
             renderCardStack('andarCards', gameData.andarCards);
             renderCardStack('baharCards', gameData.baharCards);
 
-            if(gameData.status === "ended") {
+            // GREEN LIGHT SINGLE SIGNAL: Winner side ko turn on karne ka code
+            if(gameData.status === "ended" && gameData.winner) {
                 document.getElementById('gameStatus').innerText = `${gameData.winner.toUpperCase()} WINS! 🎉`;
-                document.getElementById('confirmMsg').innerText = ""; // ROUND OVER: Status Text Cleared Auto
+                document.getElementById('confirmMsg').innerText = ""; 
+                
+                if(gameData.winner === 'andar') {
+                    document.getElementById('andarBox').classList.add('winner-glow');
+                } else if(gameData.winner === 'bahar') {
+                    document.getElementById('baharBox').classList.add('winner-glow');
+                }
             }
 
             if(gameData.historyList) {
-                let hHtml = ""; let list = Object.values(gameData.historyList);
+                let hHtml = ""; 
+                let list = Object.values(gameData.historyList);
                 list.forEach(win => {
                     let badge = (win === 'andar') ? 'blue-badge' : 'gold-badge';
                     hHtml += `<div class="history-item ${badge}">${win.substring(0,1).toUpperCase()}</div>`;
@@ -184,7 +231,9 @@
     });
 
     function renderCardStack(elementId, cardArray) {
-        let container = document.getElementById(elementId); container.innerHTML = ""; if(!cardArray) return;
+        let container = document.getElementById(elementId); 
+        container.innerHTML = ""; 
+        if(!cardArray) return;
         Object.values(cardArray).forEach(card => {
             let colorClass = (card.suit === '♦' || card.suit === '♥') ? 'red' : 'black';
             container.innerHTML += `<div class="card ${colorClass}"><span>${card.rank}${card.suit}</span><div class="suit-center" style="font-size:14px;">${card.suit}</div></div>`;
@@ -208,27 +257,33 @@
 
     window.toggleFinanceTab = function(tabName) {
         if(tabName === 'deposit') {
-            document.getElementById('depositTabSection').style.display = 'block'; document.getElementById('withdrawTabSection').style.display = 'none';
+            document.getElementById('depositTabSection').style.display = 'block'; 
+            document.getElementById('withdrawTabSection').style.display = 'none';
         } else {
-            document.getElementById('depositTabSection').style.display = 'none'; document.getElementById('withdrawTabSection').style.display = 'block';
+            document.getElementById('depositTabSection').style.display = 'none'; 
+            document.getElementById('withdrawTabSection').style.display = 'block';
         }
     }
 
     window.sendDeposit = function() {
-        let amt = document.getElementById('depAmt').value; let utr = document.getElementById('depUtr').value;
+        let amt = document.getElementById('depAmt').value; 
+        let utr = document.getElementById('depUtr').value;
         if(!amt || utr.length < 4) return alert("Fill deposit info properly!");
         push(ref(database, 'requests/deposits'), { userId: myId, amount: parseInt(amt), utr: utr, timestamp: Date.now() });
         alert("Deposit request submitted to Admin!");
-        document.getElementById('depAmt').value = ''; document.getElementById('depUtr').value = '';
+        document.getElementById('depAmt').value = ''; 
+        document.getElementById('depUtr').value = '';
     }
 
     window.sendWithdrawal = function() {
-        let amt = parseInt(document.getElementById('witAmt').value); let upi = document.getElementById('witUpi').value.trim();
+        let amt = parseInt(document.getElementById('witAmt').value); 
+        let upi = document.getElementById('witUpi').value.trim();
         if(isNaN(amt) || amt < 100 || amt > myCoins) return alert("Invalid withdrawal amount!");
         update(ref(database, 'players/' + myId), { coins: myCoins - amt });
         push(ref(database, 'requests/withdraws'), { userId: myId, amount: amt, upiId: upi, timestamp: Date.now() });
         alert("Withdrawal request sent!");
-        document.getElementById('witAmt').value = ''; document.getElementById('witUpi').value = '';
+        document.getElementById('witAmt').value = ''; 
+        document.getElementById('witUpi').value = '';
     }
 </script>
 </body>

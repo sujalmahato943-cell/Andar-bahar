@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Master Control Hub</title>
+    <title>Master Control Hub - Pro Engine</title>
     <style>
         body { background: #0f172a; color: white; font-family: sans-serif; padding: 15px; margin: 0; }
         .box { max-width: 650px; margin: 0 auto; background: #1e293b; padding: 15px; border-radius: 15px; border: 1px solid #334155; }
@@ -18,7 +18,23 @@
         th, td { padding: 10px; text-align: left; border-bottom: 1px solid #1e293b; font-size: 13px; }
         table { width: 100%; border-collapse: collapse; }
         
-        /* Search & Form Elements Layout */
+        /* Layout Grid Elements */
+        .live-dash {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .dash-card {
+            background: #1e293b;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid #475569;
+        }
+        .dash-card h4 { margin: 0 0 5px 0; font-size: 11px; color: #94a3b8; text-transform: uppercase; }
+        .dash-card p { margin: 0; font-size: 16px; font-weight: bold; line-height: 1.4; }
+
         .result-display { background: #1e293b; padding: 12px; border-radius: 6px; margin-top: 10px; display: none; }
         .info-row { display: flex; justify-content: space-between; margin-bottom: 6px; }
         input[type="text"], input[type="number"] {
@@ -31,19 +47,25 @@
 <div class="box">
     <h2>🎛️ SUPER SYSTEM CONTROLLER</h2>
     
-    <div style="display:flex; justify-content:space-between; gap:10px; margin-bottom:10px;">
-        <div style="flex:1; background:#020617; padding:10px; border-radius:8px; text-align:center;">
-            <span style="font-size:11px; color:#94a3b8;">🔵 LIVE ANDAR TOTAL BETS</span>
-            <p id="totAndarBet" style="margin:5px 0; font-size:20px; color:#60a5fa; font-weight:bold;">0 Coins</p>
+    <div class="live-dash">
+        <div class="dash-card" style="border-left: 4px solid #a855f7;">
+            <h4>👥 Total Active Bets</h4>
+            <p id="totalPlayersCount" style="color: #a855f7; font-size: 20px; margin-top: 5px;">0</p>
         </div>
-        <div style="flex:1; background:#020617; padding:10px; border-radius:8px; text-align:center;">
-            <span style="font-size:11px; color:#94a3b8;">🟡 LIVE BAHAR TOTAL BETS</span>
-            <p id="totBaharBet" style="margin:5px 0; font-size:20px; color:#fbbf24; font-weight:bold;">0 Coins</p>
+        <div class="dash-card" style="border-left: 4px solid #3b82f6;">
+            <h4>🔵 Andar Overview</h4>
+            <p id="andarPlayers" style="color: #60a5fa; font-size: 13px;">Players: 0</p>
+            <p id="totAndarBet" style="color: #3b82f6; font-size: 17px;">0 Coins</p>
+        </div>
+        <div class="dash-card" style="border-left: 4px solid #eab308;">
+            <h4>🟡 Bahar Overview</h4>
+            <p id="baharPlayers" style="color: #fbbf24; font-size: 13px;">Players: 0</p>
+            <p id="totBaharBet" style="color: #eab308; font-size: 17px;">0 Coins</p>
         </div>
     </div>
 
-    <div class="status-box">
-        MY CURRENT TARGET SELECTION: <strong id="currTarget" style="font-size:18px; color:#ffbc00; letter-spacing:1px;">LOADING...</strong>
+    <div id="adminChoiceStatus" class="admin-choice-box status-box">
+        Game Status: Syncing Live Firebase Logs...
     </div>
 
     <div class="table-section" style="text-align:center;">
@@ -115,24 +137,43 @@
         document.getElementById("currTarget").innerText = val;
     });
 
-    // Realtime Side Total Bets Accumulator logic fix
+    // ==========================================
+    // 📊 FIXED: LIVE COUNTERS ENGINE WITH INDEPENDENT PLAYER SIDES COUNT
+    // ==========================================
     onValue(ref(database, "players"), (snapshot) => {
         let tAndar = 0; let tBahar = 0;
+        let countAndarPlayers = 0; let countBaharPlayers = 0;
+        let totalUniqueBets = 0;
+
         if(snapshot.exists()) {
             Object.values(snapshot.val()).forEach(p => {
                 if(p.currentBet && p.currentBet.amount) {
-                    if(p.currentBet.side === "andar") tAndar += parseInt(p.currentBet.amount) || 0;
-                    if(p.currentBet.side === "bahar") tBahar += parseInt(p.currentBet.amount) || 0;
+                    totalUniqueBets++;
+                    let amt = parseInt(p.currentBet.amount) || 0;
+                    
+                    if(p.currentBet.side === "andar") {
+                        tAndar += amt;
+                        countAndarPlayers++; // Increment Andar active count
+                    } else if(p.currentBet.side === "bahar") {
+                        tBahar += amt;
+                        countBaharPlayers++; // Increment Bahar active count
+                    }
                 }
             });
         }
+        // Update total dynamic grid parameters safely
+        document.getElementById("totalPlayersCount").innerText = totalUniqueBets;
+        
+        document.getElementById("andarPlayers").innerText = `Players: ${countAndarPlayers}`;
         document.getElementById("totAndarBet").innerText = tAndar + " Coins";
+        
+        document.getElementById("baharPlayers").innerText = `Players: ${countBaharPlayers}`;
         document.getElementById("totBaharBet").innerText = tBahar + " Coins";
     });
 
     window.setForce = function(mode) { set(ref(database, "game/forcedWinner"), mode); }
 
-    // Synchronize Real-time Database tree logs to view components
+    // Synchronize Real-time Database logs to table layout elements
     onValue(ref(database, 'requests/deposits'), (snapshot) => {
         const body = document.getElementById('depositBody'); body.innerHTML = "";
         if(snapshot.exists()) {
@@ -161,10 +202,10 @@
         }); 
     }
 
-    // Individual Account Data Lookup Engine
+    // Individual Account Auditor Details
     window.searchPlayer = function() {
         const id = document.getElementById('searchPlayerId').value.trim();
-        if(!id) return alert("Please enter a valid Player unique identity token ID!");
+        if(!id) return alert("Please enter a valid Player ID!");
         get(ref(database, 'players/' + id)).then(snap => {
             if(snap.exists()) {
                 activeSearchedId = id; const d = snap.val();
@@ -173,33 +214,30 @@
                 document.getElementById('resBetSide').innerText = d.currentBet ? d.currentBet.side.toUpperCase() : "No Active Bet";
                 document.getElementById('resBetAmt').innerText = d.currentBet ? d.currentBet.amount + " Coins" : "0 Coins";
                 document.getElementById('searchResultBox').style.display = "block";
-            } else { alert("Player ID not registered inside Database!"); }
+            } else { alert("Player ID not found inside Database!"); }
         });
     }
 
     window.modifyCoins = function(type) {
         let val = parseInt(document.getElementById('modCoinAmt').value);
-        if(!activeSearchedId || isNaN(val) || val <= 0) return alert("Invalid entry, please load profile metrics!");
+        if(!activeSearchedId || isNaN(val) || val <= 0) return alert("Please load profiles details properly!");
         if(type === 'minus') val = -val;
         
         update(ref(database, 'players/' + activeSearchedId), { coins: increment(val) }).then(() => {
-            alert("Player portfolio balances altered securely!"); 
+            alert("Balances altered securely!"); 
             document.getElementById('modCoinAmt').value = ''; 
             searchPlayer();
         });
     }
 
-    // ✍️ UPI GATEWAY EXECUTOR FUNCTION
     window.changeUpiId = function() {
         let upi = document.getElementById("newUpiInput").value.trim();
         if(upi.length > 3) { 
             set(ref(database, "system/config"), { upi: upi }).then(() => {
-                alert("UPI Gateway Updated Globally! All players see this destination now.");
+                alert("UPI Gateway Updated Globally!");
                 document.getElementById("newUpiInput").value = "";
             }); 
-        } else {
-            alert("Please enter a valid UPI address string!");
-        }
+        } else { alert("Please enter a valid UPI ID!"); }
     }
 </script>
 </body>

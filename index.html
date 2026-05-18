@@ -2,7 +2,6 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <!-- Anti-Zoom: user-scalable=no lagane se mobile zoom bilkul band ho jayega -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Andar Bahar Casino Club</title>
     <style>
@@ -15,7 +14,6 @@
             text-align: center; 
             -webkit-user-select: none; 
             user-select: none;
-            /* Touch actions ko control karke double-tap zoom block kiya */
             touch-action: manipulation; 
         }
         .container { max-width: 480px; margin: 0 auto; background: #1c2541; padding: 15px; border-radius: 20px; box-shadow: 0px 10px 30px rgba(0,0,0,0.7); border: 1px solid #3a506b; }
@@ -32,7 +30,6 @@
         
         .board { display: flex; justify-content: space-between; margin: 15px 0; }
         
-        /* Side boxes with smooth transition for the green glow effect */
         .side-box { 
             width: 48%; 
             background: #0b132b; 
@@ -44,7 +41,6 @@
             transition: all 0.4s ease-in-out;
         }
         
-        /* Green Glow Lights for Winners */
         .side-box.winner-glow {
             border-color: #10b981 !important;
             background: #064e3b !important;
@@ -89,7 +85,6 @@
     </div>
 
     <div class="board">
-        <!-- Id add kiye taaki green light handle ho sake -->
         <div class="side-box" id="andarBox">
             <h4 style="margin:0; color:#3b82f6; font-size:15px;">ANDAR</h4>
             <div class="card-container" id="andarCards"></div>
@@ -104,7 +99,7 @@
         <button id="andarBtn" class="btn-bet activeBtn" onclick="selectSide('andar')">ANDAR</button>
         <button id="baharBtn" class="btn-bet" onclick="selectSide('bahar')">BAHAR</button>
         <br>
-        <input type="number" id="amount" class="input-amt" value="200">
+        <input type="number" id="amount" class="input-amt" value="20">
         <br>
         <button class="btn-submit" id="mainSubmitBtn" onclick="placeBet()">PLACE BET</button>
     </div>
@@ -140,7 +135,6 @@
     const app = initializeApp(firebaseConfig);
     const database = getDatabase(app);
 
-    // UNIQUE AUTO-ID GENERATOR LOGIC
     let myId = localStorage.getItem('casino_player_id');
     if(!myId) {
         myId = "PLAYER-" + Math.floor(10000 + Math.random() * 90000);
@@ -151,6 +145,8 @@
     let myCoins = 0;
     let selectedSide = "andar";
     let isBettingOpen = false;
+    let existingBetSide = null; // Purani bet ki side tracker
+    let existingBetAmount = 0;  // Purani bet ka amount tracker
 
     onValue(ref(database, 'system/config'), (snapshot) => {
         if(snapshot.exists()) { document.getElementById('liveUpiDisplay').innerText = snapshot.val().upi || "admin@upi"; }
@@ -160,15 +156,24 @@
         if(snapshot.exists()) {
             myCoins = snapshot.val().coins || 0;
             document.getElementById('topCoins').innerText = myCoins;
+            
             if(snapshot.val().currentBet) {
                 let b = snapshot.val().currentBet;
-                document.getElementById('betDisplay').innerText = `${b.amount} (${b.side.toUpperCase()})`;
-                document.getElementById('confirmMsg').innerText = `Bet Active: ${b.amount} on ${b.side.toUpperCase()}`;
+                existingBetSide = b.side;
+                existingBetAmount = parseInt(b.amount) || 0;
+                
+                // Screen par total jud kar dikhega
+                document.getElementById('betDisplay').innerText = `${existingBetAmount} (${existingBetSide.toUpperCase()})`;
+                document.getElementById('confirmMsg').innerText = `Total Bet Active: ${existingBetAmount} on ${existingBetSide.toUpperCase()}`;
+                
+                // Side button automatically match ho jayega jo select tha
+                window.selectSide(existingBetSide);
             } else {
                 document.getElementById('betDisplay').innerText = "0";
+                existingBetSide = null;
+                existingBetAmount = 0;
             }
         } else {
-            // WELCOME BONUS FIX: Ab new player ke aate hi usko 50 coins milenge
             set(ref(database, 'players/' + myId), { coins: 50, currentBet: null });
         }
     });
@@ -185,7 +190,6 @@
                 document.getElementById('andarCards').innerHTML = '';
                 document.getElementById('baharCards').innerHTML = '';
                 
-                // Naya round shuru hote hi purani green lights off karein
                 document.getElementById('andarBox').classList.remove('winner-glow');
                 document.getElementById('baharBox').classList.remove('winner-glow');
             } else {
@@ -206,7 +210,6 @@
             renderCardStack('andarCards', gameData.andarCards);
             renderCardStack('baharCards', gameData.baharCards);
 
-            // GREEN LIGHT SINGLE SIGNAL: Winner side ko turn on karne ka code
             if(gameData.status === "ended" && gameData.winner) {
                 document.getElementById('gameStatus').innerText = `${gameData.winner.toUpperCase()} WINS! 🎉`;
                 document.getElementById('confirmMsg').innerText = ""; 
@@ -241,6 +244,10 @@
     }
 
     window.selectSide = function(side) {
+        // Agar player ne pehle se bet laga rakhi hai, toh wo side change nahi kar sakta jab tak round clear na ho
+        if(existingBetSide && existingBetSide !== side) {
+            return; 
+        }
         selectedSide = side;
         document.getElementById('andarBtn').className = (side === 'andar' ? 'btn-bet activeBtn' : 'btn-bet');
         document.getElementById('baharBtn').className = (side === 'bahar' ? 'btn-bet activeBtn' : 'btn-bet');
@@ -248,11 +255,23 @@
 
     window.placeBet = function() {
         if(!isBettingOpen) return alert("Betting is Closed right now!");
-        let amt = parseInt(document.getElementById('amount').value);
-        if (amt <= 0 || isNaN(amt) || amt > myCoins) return alert("Insufficient balance!");
         
-        update(ref(database, 'players/' + myId), { coins: myCoins - amt, currentBet: { side: selectedSide, amount: amt } });
-        document.getElementById('confirmMsg').innerText = `Bet Confirmed: ${amt} Coins on ${selectedSide.toUpperCase()}`;
+        let newAmtInput = parseInt(document.getElementById('amount').value);
+        if (newAmtInput <= 0 || isNaN(newAmtInput)) return alert("Please enter a valid bet amount!");
+        if (newAmtInput > myCoins) return alert("Insufficient balance!");
+
+        // BET ACCUMULATION LOGIC (Pehle wali bet me naya amount plus ho jayega)
+        let totalUpdatedBetAmount = existingBetAmount + newAmtInput;
+        
+        update(ref(database, 'players/' + myId), { 
+            coins: myCoins - newAmtInput, 
+            currentBet: { 
+                side: selectedSide, 
+                amount: totalUpdatedBetAmount 
+            } 
+        });
+
+        document.getElementById('confirmMsg').innerText = `Bet Added! Total: ${totalUpdatedBetAmount} Coins on ${selectedSide.toUpperCase()}`;
     }
 
     window.toggleFinanceTab = function(tabName) {

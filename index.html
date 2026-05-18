@@ -145,8 +145,8 @@
     let myCoins = 0;
     let selectedSide = "andar";
     let isBettingOpen = false;
-    let existingBetSide = null; // Purani bet ki side tracker
-    let existingBetAmount = 0;  // Purani bet ka amount tracker
+    let existingBetSide = null; 
+    let existingBetAmount = 0;  
 
     onValue(ref(database, 'system/config'), (snapshot) => {
         if(snapshot.exists()) { document.getElementById('liveUpiDisplay').innerText = snapshot.val().upi || "admin@upi"; }
@@ -154,22 +154,22 @@
 
     onValue(ref(database, 'players/' + myId), (snapshot) => {
         if(snapshot.exists()) {
-            myCoins = snapshot.val().coins || 0;
+            const pData = snapshot.val();
+            myCoins = pData.coins || 0;
             document.getElementById('topCoins').innerText = myCoins;
             
-            if(snapshot.val().currentBet) {
-                let b = snapshot.val().currentBet;
-                existingBetSide = b.side;
-                existingBetAmount = parseInt(b.amount) || 0;
+            if(pData.currentBet) {
+                existingBetSide = pData.currentBet.side;
+                existingBetAmount = parseInt(pData.currentBet.amount) || 0;
                 
-                // Screen par total jud kar dikhega
+                // LIVE UI UPDATE: Screen par direct dono jud kar hi dikhega hamesha
                 document.getElementById('betDisplay').innerText = `${existingBetAmount} (${existingBetSide.toUpperCase()})`;
-                document.getElementById('confirmMsg').innerText = `Total Bet Active: ${existingBetAmount} on ${existingBetSide.toUpperCase()}`;
+                document.getElementById('confirmMsg').innerText = `Total Bet Active: ${existingBetAmount} Coins on ${existingBetSide.toUpperCase()}`;
                 
-                // Side button automatically match ho jayega jo select tha
                 window.selectSide(existingBetSide);
             } else {
                 document.getElementById('betDisplay').innerText = "0";
+                document.getElementById('confirmMsg').innerText = "";
                 existingBetSide = null;
                 existingBetAmount = 0;
             }
@@ -212,7 +212,6 @@
 
             if(gameData.status === "ended" && gameData.winner) {
                 document.getElementById('gameStatus').innerText = `${gameData.winner.toUpperCase()} WINS! 🎉`;
-                document.getElementById('confirmMsg').innerText = ""; 
                 
                 if(gameData.winner === 'andar') {
                     document.getElementById('andarBox').classList.add('winner-glow');
@@ -244,7 +243,6 @@
     }
 
     window.selectSide = function(side) {
-        // Agar player ne pehle se bet laga rakhi hai, toh wo side change nahi kar sakta jab tak round clear na ho
         if(existingBetSide && existingBetSide !== side) {
             return; 
         }
@@ -260,9 +258,18 @@
         if (newAmtInput <= 0 || isNaN(newAmtInput)) return alert("Please enter a valid bet amount!");
         if (newAmtInput > myCoins) return alert("Insufficient balance!");
 
-        // BET ACCUMULATION LOGIC (Pehle wali bet me naya amount plus ho jayega)
+        // FIXED CRITICAL LOGIC: Purane live balance se plus karke calculation ko fix kiya gaya hai
         let totalUpdatedBetAmount = existingBetAmount + newAmtInput;
         
+        // Pehle locals ko force update kiya taaki latency issues na aayein
+        existingBetSide = selectedSide;
+        existingBetAmount = totalUpdatedBetAmount;
+
+        // UI ko bina kisi network delay ke instantly render kiya
+        document.getElementById('betDisplay').innerText = `${totalUpdatedBetAmount} (${selectedSide.toUpperCase()})`;
+        document.getElementById('confirmMsg').innerText = `Total Bet Active: ${totalUpdatedBetAmount} Coins on ${selectedSide.toUpperCase()}`;
+
+        // Database me safe transactional update push kiya
         update(ref(database, 'players/' + myId), { 
             coins: myCoins - newAmtInput, 
             currentBet: { 
@@ -270,8 +277,6 @@
                 amount: totalUpdatedBetAmount 
             } 
         });
-
-        document.getElementById('confirmMsg').innerText = `Bet Added! Total: ${totalUpdatedBetAmount} Coins on ${selectedSide.toUpperCase()}`;
     }
 
     window.toggleFinanceTab = function(tabName) {

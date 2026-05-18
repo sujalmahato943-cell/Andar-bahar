@@ -5,48 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Andar Bahar Casino Club</title>
     <style>
-        body { 
-            background-color: #0b132b; 
-            color: white; 
-            font-family: sans-serif; 
-            margin: 0; 
-            padding: 10px; 
-            text-align: center; 
-            -webkit-user-select: none; 
-            user-select: none;
-            touch-action: manipulation; 
-        }
+        body { background-color: #0b132b; color: white; font-family: sans-serif; margin: 0; padding: 10px; text-align: center; -webkit-user-select: none; user-select: none; touch-action: manipulation; }
         .container { max-width: 480px; margin: 0 auto; background: #1c2541; padding: 15px; border-radius: 20px; box-shadow: 0px 10px 30px rgba(0,0,0,0.7); border: 1px solid #3a506b; }
         .header-box { background: #222e50; padding: 12px; border-radius: 15px; margin-bottom: 15px; border: 1px solid #3a506b; }
         .accent-text { color: #ffbc00; font-weight: bold; }
         .coins-text { color: #00f5d4; font-weight: bold; }
         .time-text { color: #ff5c5c; font-weight: bold; font-size: 18px; }
         .joker-area { margin: 15px 0; min-height: 170px; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 12px; }
-        
         .card { display: inline-block; width: 85px; height: 125px; background: #ffffff; color: #000000; border-radius: 10px; padding: 8px; box-sizing: border-box; position: relative; font-weight: bold; font-size: 20px; box-shadow: 0 6px 12px rgba(0,0,0,0.4); margin: 5px; }
         .card.red { color: #e63946; }
         .card.black { color: #1d3557; }
         .card .suit-center { font-size: 34px; position: absolute; top: 55%; left: 50%; transform: translate(-50%, -50%); }
-        
         .board { display: flex; justify-content: space-between; margin: 15px 0; }
-        
-        .side-box { 
-            width: 48%; 
-            background: #0b132b; 
-            padding: 10px; 
-            border-radius: 12px; 
-            min-height: 180px; 
-            border: 1px solid #3a506b; 
-            box-sizing: border-box;
-            transition: all 0.4s ease-in-out;
-        }
-        
-        .side-box.winner-glow {
-            border-color: #10b981 !important;
-            background: #064e3b !important;
-            box-shadow: 0 0 20px #10b981;
-        }
-
+        .side-box { width: 48%; background: #0b132b; padding: 10px; border-radius: 12px; min-height: 180px; border: 1px solid #3a506b; box-sizing: border-box; transition: all 0.4s ease-in-out; }
+        .side-box.winner-glow { border-color: #10b981 !important; background: #064e3b !important; box-shadow: 0 0 20px #10b981; }
         .card-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 5px; margin-top: 10px; }
         .btn-bet { background: #1e293b; color: white; border: 2px solid #3a506b; padding: 12px; font-size: 15px; font-weight: bold; border-radius: 10px; cursor: pointer; margin: 5px; width: 44%; }
         .btn-bet.activeBtn { background: #00b4d8; border-color: #00f5d4; box-shadow: 0 0 15px #00b4d8; }
@@ -135,191 +107,163 @@
     const app = initializeApp(firebaseConfig);
     const database = getDatabase(app);
 
-    let myId = localStorage.getItem('casino_player_id');
-    if(!myId) {
-        myId = "PLAYER-" + Math.floor(10000 + Math.random() * 90000);
-        localStorage.setItem('casino_player_id', myId);
-    }
-    document.getElementById("displayPlayerId").innerText = myId;
+    const dom = {
+        playerId: document.getElementById("displayPlayerId"),
+        liveUpi: document.getElementById('liveUpiDisplay'),
+        topCoins: document.getElementById('topCoins'),
+        betDisplay: document.getElementById('betDisplay'),
+        confirmMsg: document.getElementById('confirmMsg'),
+        timer: document.getElementById('timer'),
+        gameStatus: document.getElementById('gameStatus'),
+        jokerArea: document.getElementById('jokerPlaceholder'),
+        andarCards: document.getElementById('andarCards'),
+        baharCards: document.getElementById('baharCards'),
+        andarBox: document.getElementById('andarBox'),
+        baharBox: document.getElementById('baharBox'),
+        andarBtn: document.getElementById('andarBtn'),
+        baharBtn: document.getElementById('baharBtn'),
+        submitBtn: document.getElementById('mainSubmitBtn'),
+        history: document.getElementById('historyContainer')
+    };
 
-    let myCoins = 0;
-    let selectedSide = "andar";
-    let isBettingOpen = false;
-    let existingBetSide = null; 
-    let existingBetAmount = 0;  
+    let myId = localStorage.getItem('casino_player_id') || `PLAYER-${Math.floor(10000 + Math.random() * 90000)}`;
+    localStorage.setItem('casino_player_id', myId);
+    dom.playerId.innerText = myId;
 
-    onValue(ref(database, 'system/config'), (snapshot) => {
-        if(snapshot.exists()) { document.getElementById('liveUpiDisplay').innerText = snapshot.val().upi || "admin@upi"; }
+    let myCoins = 0, selectedSide = "andar", isBettingOpen = false, existingBetSide = null;
+
+    onValue(ref(database, 'system/config'), snap => {
+        if(snap.exists()) dom.liveUpi.innerText = snap.val().upi || "admin@upi";
     });
 
-    // Real-time server sync listner
-    onValue(ref(database, 'players/' + myId), (snapshot) => {
-        if(snapshot.exists()) {
-            const pData = snapshot.val();
-            myCoins = parseInt(pData.coins) || 0;
-            document.getElementById('topCoins').innerText = myCoins;
-            
-            if(pData.currentBet) {
-                existingBetSide = pData.currentBet.side;
-                existingBetAmount = parseInt(pData.currentBet.amount) || 0;
-                
-                document.getElementById('betDisplay').innerText = `${existingBetAmount} (${existingBetSide.toUpperCase()})`;
-                document.getElementById('confirmMsg').innerText = `Total Bet Active: ${existingBetAmount} Coins on ${existingBetSide.toUpperCase()}`;
-                
-                window.selectSide(existingBetSide);
-            } else {
-                document.getElementById('betDisplay').innerText = "0";
-                document.getElementById('confirmMsg').innerText = "";
-                existingBetSide = null;
-                existingBetAmount = 0;
-            }
+    onValue(ref(database, `players/${myId}`), snapshot => {
+        if(!snapshot.exists()) {
+            set(ref(database, `players/${myId}`), { coins: 1000, currentBet: null });
+            return;
+        }
+        const pData = snapshot.val();
+        myCoins = parseInt(pData.coins) || 0;
+        dom.topCoins.innerText = myCoins;
+        
+        if(pData.currentBet) {
+            existingBetSide = pData.currentBet.side;
+            let amt = parseInt(pData.currentBet.amount) || 0;
+            dom.betDisplay.innerText = `${amt} (${existingBetSide.toUpperCase()})`;
+            dom.confirmMsg.innerText = `Total Bet Active: ${amt} Coins on ${existingBetSide.toUpperCase()}`;
+            window.selectSide(existingBetSide);
         } else {
-            set(ref(database, 'players/' + myId), { coins: 1000, currentBet: null });
+            dom.betDisplay.innerText = "0";
+            dom.confirmMsg.innerText = "";
+            existingBetSide = null;
         }
     });
 
-    onValue(ref(database, 'game'), (snapshot) => {
-        if(snapshot.exists()) {
-            const gameData = snapshot.val();
-            
-            if(gameData.status === "betting") {
-                isBettingOpen = true;
-                document.getElementById('mainSubmitBtn').style.opacity = "1";
-                document.getElementById('timer').innerText = gameData.time + "s";
-                document.getElementById('gameStatus').innerText = "Place Your Bets Now!";
-                document.getElementById('andarCards').innerHTML = '';
-                document.getElementById('baharCards').innerHTML = '';
-                
-                document.getElementById('andarBox').classList.remove('winner-glow');
-                document.getElementById('baharBox').classList.remove('winner-glow');
-            } else {
-                isBettingOpen = false;
-                document.getElementById('mainSubmitBtn').style.opacity = "0.5";
-                document.getElementById('timer').innerText = "Closed";
-            }
+    onValue(ref(database, 'game'), snapshot => {
+        if(!snapshot.exists()) return;
+        const gameData = snapshot.val();
+        
+        isBettingOpen = gameData.status === "betting";
+        dom.submitBtn.style.opacity = isBettingOpen ? "1" : "0.5";
+        dom.timer.innerText = isBettingOpen ? `${gameData.time}s` : "Closed";
 
-            if(gameData.joker) {
-                let j = gameData.joker;
-                let colorClass = (j.suit === '♦' || j.suit === '♥') ? 'red' : 'black';
-                document.getElementById('jokerPlaceholder').innerHTML = `<div class="card ${colorClass}"><span>${j.rank}${j.suit}</span><div class="suit-center">${j.suit}</div></div>`;
-            } else {
-                document.getElementById('jokerPlaceholder').innerHTML = `<div class="card black" style="opacity:0.2;"><span>?</span><div class="suit-center">?</div></div>`;
-            }
+        if(isBettingOpen) {
+            dom.gameStatus.innerText = "Place Your Bets Now!";
+            dom.andarCards.innerHTML = '';
+            dom.baharCards.innerHTML = '';
+            dom.andarBox.classList.remove('winner-glow');
+            dom.baharBox.classList.remove('winner-glow');
+        }
 
-            if(gameData.status === "dealing") { document.getElementById('gameStatus').innerText = "Dealing Cards..."; }
-            renderCardStack('andarCards', gameData.andarCards);
-            renderCardStack('baharCards', gameData.baharCards);
+        if(gameData.joker) {
+            let j = gameData.joker;
+            let clr = (j.suit === '♦' || j.suit === '♥') ? 'red' : 'black';
+            dom.jokerArea.innerHTML = `<div class="card ${clr}"><span>${j.rank}${j.suit}</span><div class="suit-center">${j.suit}</div></div>`;
+        }
 
-            if(gameData.status === "ended" && gameData.winner) {
-                document.getElementById('gameStatus').innerText = `${gameData.winner.toUpperCase()} WINS! 🎉`;
-                if(gameData.winner === 'andar') {
-                    document.getElementById('andarBox').classList.add('winner-glow');
-                } else if(gameData.winner === 'bahar') {
-                    document.getElementById('baharBox').classList.add('winner-glow');
-                }
-            }
+        if(gameData.status === "dealing") dom.gameStatus.innerText = "Dealing Cards...";
 
-            if(gameData.historyList) {
-                let hHtml = ""; 
-                let list = Object.values(gameData.historyList);
-                list.forEach(win => {
-                    let badge = (win === 'andar') ? 'blue-badge' : 'gold-badge';
-                    hHtml += `<div class="history-item ${badge}">${win.substring(0,1).toUpperCase()}</div>`;
-                });
-                document.getElementById('historyContainer').innerHTML = hHtml;
-            }
+        // Real-time batch-rendering optimization
+        renderCardStack(dom.andarCards, gameData.andarCards);
+        renderCardStack(dom.baharCards, gameData.baharCards);
+
+        if(gameData.status === "ended" && gameData.winner) {
+            dom.gameStatus.innerText = `${gameData.winner.toUpperCase()} WINS! 🎉`;
+            dom[`${gameData.winner}Box`].classList.add('winner-glow');
+        }
+
+        if(gameData.historyList) {
+            dom.history.innerHTML = Object.values(gameData.historyList).map(win => {
+                return `<div class="history-item ${win === 'andar' ? 'blue-badge' : 'gold-badge'}">${win[0].toUpperCase()}</div>`;
+            }).join('');
         }
     });
 
-    function renderCardStack(elementId, cardArray) {
-        let container = document.getElementById(elementId); 
-        container.innerHTML = ""; 
-        if(!cardArray) return;
-        Object.values(cardArray).forEach(card => {
-            let colorClass = (card.suit === '♦' || card.suit === '♥') ? 'red' : 'black';
-            container.innerHTML += `<div class="card ${colorClass}"><span>${card.rank}${card.suit}</span><div class="suit-center" style="font-size:14px;">${card.suit}</div></div>`;
-        });
+    function renderCardStack(element, cardArray) {
+        if(!cardArray) { element.innerHTML = ""; return; }
+        element.innerHTML = Object.values(cardArray).map(card => {
+            let clr = (card.suit === '♦' || card.suit === '♥') ? 'red' : 'black';
+            return `<div class="card ${clr}"><span>${card.rank}${card.suit}</span><div class="suit-center" style="font-size:14px;">${card.suit}</div></div>`;
+        }).join('');
     }
 
     window.selectSide = function(side) {
         if(existingBetSide && existingBetSide !== side) {
+            alert(`Aapne pehle se ${existingBetSide.toUpperCase()} par bet lock ki hui h!`);
             return; 
         }
         selectedSide = side;
-        document.getElementById('andarBtn').className = (side === 'andar' ? 'btn-bet activeBtn' : 'btn-bet');
-        document.getElementById('baharBtn').className = (side === 'bahar' ? 'btn-bet activeBtn' : 'btn-bet');
+        dom.andarBtn.className = (side === 'andar' ? 'btn-bet activeBtn' : 'btn-bet');
+        dom.baharBtn.className = (side === 'bahar' ? 'btn-bet activeBtn' : 'btn-bet');
     }
 
-    // 🔥 PURE ADVANCED ATOMIC TRANSACTION METHOD (Sahi Calculation Engine)
     window.placeBet = function() {
-        if(!isBettingOpen) return alert("Betting is Closed right now!");
-        
+        if(!isBettingOpen) return alert("Betting abhi locked hai!");
         let newAmtInput = parseInt(document.getElementById('amount').value);
-        if (newAmtInput <= 0 || isNaN(newAmtInput)) return alert("Please enter a valid bet amount!");
-        if (newAmtInput > myCoins) return alert("Insufficient balance!");
+        if (newAmtInput <= 0 || isNaN(newAmtInput)) return alert("Sahi amount enter karein!");
+        if (newAmtInput > myCoins) return alert("Insufficient Balance!");
 
-        const playerRef = ref(database, 'players/' + myId);
-
-        // Firebase Transaction ka use kiya hai taaki safe multi-clicks calculate ho sakein backend pe
-        runTransaction(playerRef, (currentData) => {
+        runTransaction(ref(database, `players/${myId}`), (currentData) => {
             if (currentData) {
                 let currentCoins = parseInt(currentData.coins) || 0;
-                if (newAmtInput > currentCoins) {
-                    return; // Fail safe agar calculation timing match na ho
-                }
-
-                let currentActiveBetAmt = 0;
-                if (currentData.currentBet && currentData.currentBet.side === selectedSide) {
-                    currentActiveBetAmt = parseInt(currentData.currentBet.amount) || 0;
-                }
-
-                // Perfect addition: Purani active bet + Nayi dynamic input bet
-                let finalTotalBet = currentActiveBetAmt + newAmtInput;
-                let coinsLeftAfterBet = currentCoins - newAmtInput;
-
-                currentData.coins = coinsLeftAfterBet;
-                currentData.currentBet = {
-                    side: selectedSide,
-                    amount: finalTotalBet // Database me absolute full calculation update lock ho gayi!
-                };
+                if (newAmtInput > currentCoins) return; 
+                let activeBetAmt = (currentData.currentBet && currentData.currentBet.side === selectedSide) ? parseInt(currentData.currentBet.amount) || 0 : 0;
+                currentData.coins = currentCoins - newAmtInput;
+                currentData.currentBet = { side: selectedSide, amount: activeBetAmt + newAmtInput };
             }
             return currentData;
-        }).then(() => {
-            console.log("Bet successfully stacked on server!");
-        }).catch((err) => {
-            alert("Transaction error, please try again.");
-        });
+        }).catch(() => alert("Network Busy, try again."));
     }
 
     window.toggleFinanceTab = function(tabName) {
-        if(tabName === 'deposit') {
-            document.getElementById('depositTabSection').style.display = 'block'; 
-            document.getElementById('withdrawTabSection').style.display = 'none';
-        } else {
-            document.getElementById('depositTabSection').style.display = 'none'; 
-            document.getElementById('withdrawTabSection').style.display = 'block';
-        }
+        const isDep = tabName === 'deposit';
+        document.getElementById('depositTabSection').style.display = isDep ? 'block' : 'none';
+        document.getElementById('withdrawTabSection').style.display = isDep ? 'none' : 'block';
     }
 
     window.sendDeposit = function() {
         let amt = document.getElementById('depAmt').value; 
-        let utr = document.getElementById('depUtr').value;
-        if(!amt || utr.length < 4) return alert("Fill deposit info properly!");
+        let utr = document.getElementById('depUtr').value.trim();
+        if(!amt || utr.length < 6) return alert("Details incomplete hain!");
         push(ref(database, 'requests/deposits'), { userId: myId, amount: parseInt(amt), utr: utr, timestamp: Date.now() });
-        alert("Deposit request submitted to Admin!");
-        document.getElementById('depAmt').value = ''; 
-        document.getElementById('depUtr').value = '';
+        alert("Request sent successfully!");
+        document.getElementById('depAmt').value = ''; document.getElementById('depUtr').value = '';
     }
 
     window.sendWithdrawal = function() {
         let amt = parseInt(document.getElementById('witAmt').value); 
         let upi = document.getElementById('witUpi').value.trim();
-        if(isNaN(amt) || amt < 100 || amt > myCoins) return alert("Invalid withdrawal amount!");
-        update(ref(database, 'players/' + myId), { coins: myCoins - amt });
-        push(ref(database, 'requests/withdraws'), { userId: myId, amount: amt, upiId: upi, timestamp: Date.now() });
-        alert("Withdrawal request sent!");
-        document.getElementById('witAmt').value = ''; 
-        document.getElementById('witUpi').value = '';
+        if(isNaN(amt) || amt < 100 || amt > myCoins) return alert("Invalid amount!");
+        
+        runTransaction(ref(database, `players/${myId}`), (profile) => {
+            if(profile && profile.coins >= amt) {
+                profile.coins -= amt;
+                push(ref(database, 'requests/withdraws'), { userId: myId, amount: amt, upiId: upi, timestamp: Date.now() });
+            }
+            return profile;
+        }).then(() => {
+            alert("Withdrawal request filed!");
+            document.getElementById('witAmt').value = ''; document.getElementById('witUpi').value = '';
+        });
     }
 </script>
 </body>

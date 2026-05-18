@@ -129,7 +129,7 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-    import { getDatabase, ref, set, update, onValue, push } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+    import { getDatabase, ref, set, update, onValue, push, runTransaction } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
     const firebaseConfig = { databaseURL: "https://my-first-app-cad29-default-rtdb.firebaseio.com" };
     const app = initializeApp(firebaseConfig);
@@ -142,7 +142,6 @@
     }
     document.getElementById("displayPlayerId").innerText = myId;
 
-    // GLOBAL JAVASCRIPT STATE VARIABLES (For instant calculations without network delay)
     let myCoins = 0;
     let selectedSide = "andar";
     let isBettingOpen = false;
@@ -153,7 +152,7 @@
         if(snapshot.exists()) { document.getElementById('liveUpiDisplay').innerText = snapshot.val().upi || "admin@upi"; }
     });
 
-    // Pehle se lagi hui bet aur coins ko track karne ke liye standard data listener
+    // Real-time server sync listner
     onValue(ref(database, 'players/' + myId), (snapshot) => {
         if(snapshot.exists()) {
             const pData = snapshot.val();
@@ -164,20 +163,18 @@
                 existingBetSide = pData.currentBet.side;
                 existingBetAmount = parseInt(pData.currentBet.amount) || 0;
                 
-                // Screen display logic setup
                 document.getElementById('betDisplay').innerText = `${existingBetAmount} (${existingBetSide.toUpperCase()})`;
                 document.getElementById('confirmMsg').innerText = `Total Bet Active: ${existingBetAmount} Coins on ${existingBetSide.toUpperCase()}`;
                 
                 window.selectSide(existingBetSide);
             } else {
-                // Round khatam hone par sab variables automatic clean ho jayenge
                 document.getElementById('betDisplay').innerText = "0";
                 document.getElementById('confirmMsg').innerText = "";
                 existingBetSide = null;
                 existingBetAmount = 0;
             }
         } else {
-            set(ref(database, 'players/' + myId), { coins: 50, currentBet: null });
+            set(ref(database, 'players/' + myId), { coins: 1000, currentBet: null });
         }
     });
 
@@ -209,7 +206,7 @@
                 document.getElementById('jokerPlaceholder').innerHTML = `<div class="card black" style="opacity:0.2;"><span>?</span><div class="suit-center">?</div></div>`;
             }
 
-            if(gameData.status === "dealing") { document.getElementById('gameStatus').innerText = "Dealing Cards Rapidly (1s)..."; }
+            if(gameData.status === "dealing") { document.getElementById('gameStatus').innerText = "Dealing Cards..."; }
             renderCardStack('andarCards', gameData.andarCards);
             renderCardStack('baharCards', gameData.baharCards);
 
@@ -253,7 +250,7 @@
         document.getElementById('baharBtn').className = (side === 'bahar' ? 'btn-bet activeBtn' : 'btn-bet');
     }
 
-    // 🔥 INSTANT UI ENGINE SYNC PROCESSOR (Yeh logic bina refresh ke automatic calculation fix karega)
+    // 🔥 PURE ADVANCED ATOMIC TRANSACTION METHOD (Sahi Calculation Engine)
     window.placeBet = function() {
         if(!isBettingOpen) return alert("Betting is Closed right now!");
         
@@ -261,27 +258,36 @@
         if (newAmtInput <= 0 || isNaN(newAmtInput)) return alert("Please enter a valid bet amount!");
         if (newAmtInput > myCoins) return alert("Insufficient balance!");
 
-        // 1. Pehle pure mathematical balance ko local variables me plus-minus kiya
-        let finalCalculatedBetTotal = existingBetAmount + newAmtInput;
-        let finalCoinsLeft = myCoins - newAmtInput;
+        const playerRef = ref(database, 'players/' + myId);
 
-        // 2. CRITICAL STEP: Firebase database ki latency wait kiye bina, UI state ko turant update kiya
-        existingBetSide = selectedSide;
-        existingBetAmount = finalCalculatedBetTotal;
-        myCoins = finalCoinsLeft;
+        // Firebase Transaction ka use kiya hai taaki safe multi-clicks calculate ho sakein backend pe
+        runTransaction(playerRef, (currentData) => {
+            if (currentData) {
+                let currentCoins = parseInt(currentData.coins) || 0;
+                if (newAmtInput > currentCoins) {
+                    return; // Fail safe agar calculation timing match na ho
+                }
 
-        // 3. Screen Text blocks ko instant mathematical value render kiye (50 + 40 = 90 Instant Output)
-        document.getElementById('topCoins').innerText = finalCoinsLeft;
-        document.getElementById('betDisplay').innerText = `${finalCalculatedBetTotal} (${selectedSide.toUpperCase()})`;
-        document.getElementById('confirmMsg').innerText = `Total Bet Active: ${finalCalculatedBetTotal} Coins on ${selectedSide.toUpperCase()}`;
+                let currentActiveBetAmt = 0;
+                if (currentData.currentBet && currentData.currentBet.side === selectedSide) {
+                    currentActiveBetAmt = parseInt(currentData.currentBet.amount) || 0;
+                }
 
-        // 4. Sab setting save hone ke baad Firebase Database ko async order push kiya 
-        update(ref(database, 'players/' + myId), { 
-            coins: finalCoinsLeft, 
-            currentBet: { 
-                side: selectedSide, 
-                amount: finalCalculatedBetTotal 
-            } 
+                // Perfect addition: Purani active bet + Nayi dynamic input bet
+                let finalTotalBet = currentActiveBetAmt + newAmtInput;
+                let coinsLeftAfterBet = currentCoins - newAmtInput;
+
+                currentData.coins = coinsLeftAfterBet;
+                currentData.currentBet = {
+                    side: selectedSide,
+                    amount: finalTotalBet // Database me absolute full calculation update lock ho gayi!
+                };
+            }
+            return currentData;
+        }).then(() => {
+            console.log("Bet successfully stacked on server!");
+        }).catch((err) => {
+            alert("Transaction error, please try again.");
         });
     }
 

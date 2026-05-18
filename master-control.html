@@ -106,29 +106,58 @@
             font-size: 15px;
         }
         hr { border: 0; border-top: 1px solid #334155; margin: 15px 0; }
+        
+        .admin-choice-box {
+            background: rgba(56, 189, 248, 0.1);
+            border: 1px dashed #38bdf8;
+            color: #38bdf8;
+            padding: 10px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 16px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
 
 <div class="admin-container">
     <h2>🛠️ MASTER CONTROL PANEL</h2>
-    <p style="text-align:center; color:#64748b; font-size:13px; margin-top:-10px;">Realtime Advanced Game Controller</p>
+    <p style="text-align:center; color:#64748b; font-size:13px; margin-top:-10px;">Manual Selection Game Board</p>
 
-    <!-- 📊 NEW LIVE BOARD: TOTAL BETS ON BOTH SIDES -->
+    <!-- 📊 LIVE BOARD: TOTAL BETS ON BOTH SIDES -->
     <div class="live-dash">
         <div class="dash-card" style="border-left: 4px solid #3b82f6;">
             <h4>🔵 Total Andar Bets</h4>
-            <p id="totalAndarPool" style="color: #3b82f6;">0</p>
+            <p id="totalAndarPool" style="color: #3b82f6;">0 Coins</p>
         </div>
         <div class="dash-card" style="border-left: 4px solid #eab308;">
             <h4>🟡 Total Bahar Bets</h4>
-            <p id="totalBaharPool" style="color: #eab308;">0</p>
+            <p id="totalBaharPool" style="color: #eab308;">0 Coins</p>
         </div>
     </div>
 
-    <!-- 👤 MODULE 1: PLAYER SEARCH & COIN MANAGEMENT -->
+    <!-- 📢 ADMIN LIVE SELECTION STATUS SHOWER -->
+    <div id="adminChoiceStatus" class="admin-choice-box">
+        Current Round Status: Waiting for Admin Winner Selection...
+    </div>
+
+    <!-- 🏆 DECLARE WINNER SYSTEM DIRECTLY UNDER BETS DISPLAY -->
     <div class="section-box">
-        <h3>👤 Player Management</h3>
+        <h3>🏆 Declare Winner (Manual Selection)</h3>
+        <p style="color:#94a3b8; font-size:12px; margin-top:-5px; margin-bottom:12px;">Clicking a side will instantly lock that winner, credit the winning players, and log the selection.</p>
+        
+        <div class="btn-grid">
+            <button class="btn btn-blue" style="font-size:17px;" onclick="declareWinner('andar')">🔵 DECLARE ANDAR WIN</button>
+            <button class="btn btn-orange" style="font-size:17px;" onclick="declareWinner('bahar')">🟡 DECLARE BAHAR WIN</button>
+        </div>
+        <button class="btn btn-red" style="width:100%; margin-top:5px; font-size:15px;" onclick="resetRoundManual()">🔄 RESTART NEW CLEAN ROUND</button>
+    </div>
+
+    <!-- 👤 MODULE 2: PLAYER SEARCH & COIN MANAGEMENT -->
+    <div class="section-box">
+        <h3>👤 Player Account Management</h3>
         <label for="searchPlayerId">Enter Player Unique ID:</label>
         <input type="text" id="searchPlayerId" placeholder="e.g., PLAYER-12345">
         <button class="btn btn-blue" onclick="searchPlayer()">🔍 SEARCH PLAYER DETAILS</button>
@@ -161,29 +190,6 @@
             </div>
         </div>
     </div>
-
-    <!-- 🎮 MODULE 2: TIMER SYSTEM -->
-    <div class="section-box">
-        <h3>🎮 Game Phase Controls</h3>
-        <label for="timerInput">Set Betting Timer (Seconds):</label>
-        <input type="number" id="timerInput" value="30">
-        
-        <div class="btn-grid">
-            <button class="btn btn-green" onclick="controlGame('start')">🟢 START NEW ROUND TIME</button>
-            <button class="btn btn-orange" onclick="controlGame('stop')">🛑 STOP / LOCK BETS</button>
-        </div>
-    </div>
-
-    <!-- 🏆 MODULE 3: WINNER SWITCH (AUTOMATIC NEXT ROUND ENGINE) -->
-    <div class="section-box">
-        <h3>🏆 Declare Winner & Auto-Reset Round</h3>
-        <p style="color:#94a3b8; font-size:12px; margin-top:-5px; margin-bottom:12px;">Note: Clicking a winner pays out correct players and resets the board immediately for the next round.</p>
-        
-        <div class="btn-grid">
-            <button class="btn btn-blue" style="font-size:18px;" onclick="declareWinnerAndReset('andar')">🔵 DECLARE ANDAR WIN</button>
-            <button class="btn btn-orange" style="font-size:18px;" onclick="declareWinnerAndReset('bahar')">🟡 DECLARE BAHAR WIN</button>
-        </div>
-    </div>
 </div>
 
 <script type="module">
@@ -195,7 +201,6 @@
     const database = getDatabase(app);
 
     let activeSearchedId = null;
-    let countdownInterval = null;
 
     // ==========================================
     // 👀 LIVE LOOP: CALCULATE TOTAL SIDE BETS
@@ -217,10 +222,80 @@
                 }
             });
         }
-        // Update Live Counters on Master Panel
         document.getElementById('totalAndarPool').innerText = totalAndar + " Coins";
         document.getElementById('totalBaharPool').innerText = totalBahar + " Coins";
     });
+
+    // Sync Game current winner selection text message on Panel load
+    onValue(ref(database, 'game'), (snapshot) => {
+        if(snapshot.exists()) {
+            const gameData = snapshot.val();
+            if(gameData.status === "ended" && gameData.winner) {
+                document.getElementById('adminChoiceStatus').innerHTML = `📢 Admin chose <span style="text-transform: uppercase; color:#ffbc00;">${gameData.winner}</span> for Win!`;
+            } else {
+                document.getElementById('adminChoiceStatus').innerText = "Current Round Status: Betting Active / Waiting for Winner Selection...";
+            }
+        }
+    });
+
+    // ==========================================
+    // 🏆 MANUAL WINNER DECLARE (NO AUTO-RESET)
+    // ==========================================
+    window.declareWinner = function(winningSide) {
+        const gameRef = ref(database, 'game');
+
+        // 1. Database game status setup (End phase configuration locks)
+        update(gameRef, { status: "ended", winner: winningSide });
+        push(ref(database, 'game/historyList'), winningSide);
+
+        // 2. Real-time Winner Payout loop distribution
+        get(ref(database, 'players')).then((snapshot) => {
+            if(snapshot.exists()) {
+                const allPlayers = snapshot.val();
+                
+                Object.keys(allPlayers).forEach((playerId) => {
+                    const playerData = allPlayers[playerId];
+                    
+                    // Winner credit calculation node logic
+                    if(playerData.currentBet && playerData.currentBet.side === winningSide) {
+                        let betPoolAmount = parseInt(playerData.currentBet.amount) || 0;
+                        let netPayoutTotal = betPoolAmount * 2; // Dynamic multi stack double credit
+
+                        update(ref(database, 'players/' + playerId), {
+                            coins: increment(netPayoutTotal)
+                        });
+                    }
+                });
+                alert(`Winner ${winningSide.toUpperCase()} successfully processed & paid out! Click 'Restart Round' when you want to clear the screen for next game.`);
+            }
+        });
+    }
+
+    // ==========================================
+    // 🔄 MANUAL CLEAN RESET BUTTON
+    // ==========================================
+    window.resetRoundManual = function() {
+        get(ref(database, 'players')).then((snapshot) => {
+            if(snapshot.exists()) {
+                const allPlayers = snapshot.val();
+                Object.keys(allPlayers).forEach((id) => {
+                    update(ref(database, 'players/' + id), { currentBet: null });
+                });
+            }
+        });
+
+        // Setup clean state values for next round structure
+        update(ref(database, 'game'), {
+            status: "betting",
+            time: 30, // Default local server state timing initialization
+            joker: null,
+            winner: null,
+            andarCards: null,
+            baharCards: null
+        }).then(() => {
+            alert("Board flushed completely! Ready for new bets.");
+        });
+    }
 
     // ==========================================
     // 👤 SEARCH & WALLET MANAGEMENT
@@ -266,88 +341,6 @@
             alert(`Balance updated successfully!`);
             document.getElementById('modCoinAmt').value = '';
             searchPlayer(); 
-        });
-    }
-
-    // ==========================================
-    // 🎮 TIMER PHASE SYSTEM
-    // ==========================================
-    window.controlGame = function(action) {
-        clearInterval(countdownInterval);
-        const gameRef = ref(database, 'game');
-
-        if(action === 'start') {
-            let timeSec = parseInt(document.getElementById('timerInput').value) || 30;
-            update(gameRef, { status: "betting", time: timeSec, winner: null, andarCards: null, baharCards: null });
-            
-            countdownInterval = setInterval(() => {
-                timeSec--;
-                if(timeSec <= 0) {
-                    clearInterval(countdownInterval);
-                    update(gameRef, { status: "dealing", time: 0 });
-                } else {
-                    update(gameRef, { time: timeSec });
-                }
-            }, 1000);
-            alert("New Round Betting Started!");
-        } else if(action === 'stop') {
-            update(gameRef, { status: "dealing", time: 0 });
-            alert("Betting Phase Stopped!");
-        }
-    }
-
-    // ==========================================
-    // 🏆 WINNER PAYOUT & IMMEDIATE AUTOMATIC RESET ENGINE
-    // ==========================================
-    window.declareWinnerAndReset = function(winningSide) {
-        clearInterval(countdownInterval);
-        const gameRef = ref(database, 'game');
-
-        // Step 1: Client side par winner show karo aur history logs me daalo
-        update(gameRef, { status: "ended", winner: winningSide });
-        push(ref(database, 'game/historyList'), winningSide);
-
-        // Step 2: Winners ko payout do aur unke active bets delete karo automatic loop me
-        get(ref(database, 'players')).then((snapshot) => {
-            if(snapshot.exists()) {
-                const allPlayers = snapshot.val();
-                
-                // Pure database optimization map loop
-                Object.keys(allPlayers).forEach((playerId) => {
-                    const playerData = allPlayers[playerId];
-                    
-                    // Agar player ne right side par bet lagayi thi toh dynamic check karo
-                    if(playerData.currentBet && playerData.currentBet.side === winningSide) {
-                        let betPoolAmount = parseInt(playerData.currentBet.amount) || 0;
-                        let netPayoutTotal = betPoolAmount * 2; // Direct Double (20+25=45 -> 45x2=90)
-
-                        // Payout execute karo aur bet null karo ek hi transaction me
-                        update(ref(database, 'players/' + playerId), {
-                            coins: increment(netPayoutTotal),
-                            currentBet: null
-                        });
-                    } else {
-                        // Loose karne walo ki bet clear karo taaki naye round me data crash na ho
-                        update(ref(database, 'players/' + playerId), {
-                            currentBet: null
-                        });
-                    }
-                });
-            }
-
-            // Step 3: Pure board game variables ko instant refresh karke clean state par laao
-            setTimeout(() => {
-                set(gameRef, {
-                    status: "betting",
-                    time: 30,
-                    joker: null,
-                    winner: null,
-                    andarCards: null,
-                    baharCards: null,
-                    historyList: allPlayers ? (allPlayers.game ? allPlayers.game.historyList : null) : null
-                });
-                alert(`Round ended! Winner ${winningSide.toUpperCase()} paid out. System reset done for NEXT round!`);
-            }, 2500); // 2.5 seconds screen hold time players ko win dikhane ke liye, fir auto reset!
         });
     }
 </script>

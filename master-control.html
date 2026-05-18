@@ -18,7 +18,7 @@
         th, td { padding: 10px; text-align: left; border-bottom: 1px solid #1e293b; font-size: 13px; }
         table { width: 100%; border-collapse: collapse; }
         
-        /* Search Box Layout */
+        /* Search & Form Elements Layout */
         .result-display { background: #1e293b; padding: 12px; border-radius: 6px; margin-top: 10px; display: none; }
         .info-row { display: flex; justify-content: space-between; margin-bottom: 6px; }
         input[type="text"], input[type="number"] {
@@ -89,6 +89,13 @@
             <tbody id="withdrawBody"><tr><td colspan="4">No Pending Requests</td></tr></tbody>
         </table>
     </div>
+
+    <div class="table-section">
+        <h4 style="margin:0 0 10px 0; color:#ffbc00;">✍️ UPDATE LIVE UPI GATEWAY</h4>
+        <p style="color:#94a3b8; font-size:11px; margin-top:-5px; margin-bottom:10px;">(This changes the deposit address displayed on all player screens instantly)</p>
+        <input type="text" id="newUpiInput" placeholder="Enter new merchant UPI ID" style="width:65%;">
+        <button class="btn-andar" style="padding:10px 15px; margin-left:5px; border:none; background:#3b82f6;" onclick="changeUpiId()">UPDATE UPI</button>
+    </div>
 </div>
 
 <script type="module">
@@ -132,7 +139,7 @@
             Object.entries(snapshot.val()).forEach(([key, req]) => {
                 body.innerHTML += `<tr><td><strong>${req.userId}</strong></td><td>${req.amount}</td><td>${req.utr}</td>
                 <td><button class="btn-approve" onclick="clearRequestNode('deposits','${key}')">✓ Clear Log</button>
-                <button class="btn-reject" onclick="clearRequestNode('deposits','${key}')">✗ Reject</button></td></tr>`;
+                <button class="btn-red" style="padding:5px 8px; font-size:11px;" onclick="clearRequestNode('deposits','${key}')">✗ Reject</button></td></tr>`;
             });
         } else { body.innerHTML = "<tr><td colspan='4'>No Pending Requests</td></tr>"; }
     });
@@ -143,7 +150,7 @@
             Object.entries(snapshot.val()).forEach(([key, req]) => {
                 body.innerHTML += `<tr><td><strong>${req.userId}</strong></td><td>${req.amount}</td><td>${req.upiId}</td>
                 <td><button class="btn-approve" onclick="clearRequestNode('withdraws','${key}')">✓ Clear Log</button>
-                <button class="btn-reject" onclick="clearRequestNode('withdraws','${key}')">✗ Clear Log</button></td></tr>`;
+                <button class="btn-red" style="padding:5px 8px; font-size:11px;" onclick="clearRequestNode('withdraws','${key}')">✗ Clear Log</button></td></tr>`;
             });
         } else { body.innerHTML = "<tr><td colspan='4'>No Pending Requests</td></tr>"; }
     });
@@ -180,6 +187,19 @@
             document.getElementById('modCoinAmt').value = ''; 
             searchPlayer();
         });
+    }
+
+    // ✍️ UPI GATEWAY EXECUTOR FUNCTION
+    window.changeUpiId = function() {
+        let upi = document.getElementById("newUpiInput").value.trim();
+        if(upi.length > 3) { 
+            set(ref(database, "system/config"), { upi: upi }).then(() => {
+                alert("UPI Gateway Updated Globally! All players see this destination now.");
+                document.getElementById("newUpiInput").value = "";
+            }); 
+        } else {
+            alert("Please enter a valid UPI address string!");
+        }
     }
 </script>
 </body>

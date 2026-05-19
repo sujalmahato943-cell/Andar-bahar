@@ -9,14 +9,15 @@
         .box { max-width: 650px; margin: 0 auto; background: #1e293b; padding: 15px; border-radius: 15px; border: 1px solid #334155; }
         button { padding: 12px 15px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; margin: 4px; text-transform: uppercase; transition: all 0.2s; }
         button:active { transform: scale(0.97); }
+        .btn-start-loop { background: #ec4899; color: white; font-size: 15px; animation: pulse 2s infinite; }
         .btn-auto { background: #64748b; color: white; }
         .btn-andar { background: #2563eb; color: white; border: 2px solid #60a5fa; }
         .btn-bahar { background: #d97706; color: white; border: 2px solid #fbbf24; }
         .btn-approve { background: #10b981; color: white; font-size: 11px; border-radius: 4px; padding: 6px 10px; margin: 2px; }
         .btn-reject { background: #ef4444; color: white; font-size: 11px; border-radius: 4px; padding: 6px 10px; margin: 2px; }
         .status-box { background: #020617; padding: 12px; border-radius: 8px; margin: 10px 0; color: #38bdf8; font-size: 14px; text-align: center; font-weight: bold; }
-        .table-section { background: #0b132b; padding: 12px; border-radius: 8px; margin-top: 15px; text-align: left; border: 1px solid #1e293b; }
-        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #1e293b; font-size: 13px; }
+        .table-section { background: #0b132b; padding: 12px; border-radius: 8px; margin-top: 15px; text-align: left; border: 1px solid #1e293b; overflow-x: auto; }
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #1e293b; font-size: 13px; white-space: nowrap; }
         table { width: 100%; border-collapse: collapse; }
         .live-dash { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px; }
         .dash-card { background: #1e293b; padding: 10px; border-radius: 8px; text-align: center; border: 1px solid #475569; }
@@ -25,14 +26,21 @@
         .result-display { background: #1e293b; padding: 12px; border-radius: 6px; margin-top: 10px; display: none; }
         .info-row { display: flex; justify-content: space-between; margin-bottom: 6px; }
         input[type="text"], input[type="number"] { padding: 10px; background: #020617; color: white; border: 1px solid #334155; border-radius: 5px; box-sizing: border-box; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
     </style>
 </head>
 <body>
 
 <div class="box">
     <h2>🎛️ SUPER SYSTEM CONTROLLER</h2>
+
+    <div class="table-section" style="text-align:center; background:#1e1b4b; border-color:#4338ca;">
+        <h4 style="margin:0 0 5px 0; color:#f472b6;">⚡ NO-SERVER GAME ENGINE</h4>
+        <p style="color:#cbd5e1; font-size:12px; margin:0 0 10px 0;">Mobile users: Is button ko click karke page open rakhein, game cycle automatically chalti rahegi!</p>
+        <button class="btn-start-loop" id="loopTriggerBtn" style="width:96%;" onclick="startMobileGameEngine()">🏁 START AUTOMATED GAME ROUND</button>
+    </div>
     
-    <div class="live-dash">
+    <div class="live-dash" style="margin-top:15px;">
         <div class="dash-card" style="border-left: 4px solid #a855f7;">
             <h4>👥 Total Active Bets</h4>
             <p id="totalPlayersCount" style="color: #a855f7; font-size: 20px; margin-top: 5px;">0</p>
@@ -55,7 +63,6 @@
 
     <div class="table-section" style="text-align:center;">
         <h4 style="margin:0 0 10px 0; color:#38bdf8;">🏆 CHOOSE WINNER OVERRIDE FOR THIS ROUND</h4>
-        <p style="color:#94a3b8; font-size:11px; margin-top:-5px; margin-bottom:10px;">(Suspense dealing loop active: Clicking a side will reveal 3-4 cards before match closure)</p>
         <button class="btn-andar" style="width:47%; font-size:15px;" onclick="setForce('andar')">📢 FORCE ANDAR WIN</button>
         <button class="btn-bahar" style="width:47%; font-size:15px;" onclick="setForce('bahar')">📢 FORCE BAHAR WIN</button>
         <button class="btn-auto" style="width: 96%; margin-top:8px;" onclick="setForce('auto')">♻️ RESET TO AUTOMATIC LOW-BET</button>
@@ -73,7 +80,7 @@
             <div class="info-row"><span>Round Bet Amount:</span><span id="resBetAmt" style="color:#fbbf24;">--</span></div>
             <hr style="border:0; border-top:1px solid #334155; margin:10px 0;">
             <label for="modCoinAmt">Modify Wallet Value:</label>
-            <input type="number" id="modCoinAmt" placeholder="Amount (e.g., 500)" style="width:100%;">
+            <input type="number" id="modCoinAmt" placeholder="Amount (e.g., 500)" style="width:100%;" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
             <div style="display:flex; gap:10px; margin-top:8px;">
                 <button class="btn-approve" style="flex:1; font-size:14px; padding:10px;" onclick="modifyCoins('add')">➕ ADD COINS</button>
                 <button class="btn-reject" style="flex:1; font-size:14px; padding:10px;" onclick="modifyCoins('minus')">➖ MINUS COINS</button>
@@ -113,6 +120,8 @@
     const database = getDatabase(app);
 
     let activeSearchedId = null;
+    let searchListenerUnsubscribe = null;
+    let isEngineRunning = false;
 
     onValue(ref(database, "game/forcedWinner"), (snapshot) => {
         let val = snapshot.exists() ? snapshot.val().toUpperCase() : "AUTO (LOW-BET)";
@@ -140,6 +149,103 @@
 
     window.setForce = function(mode) { set(ref(database, "game/forcedWinner"), mode); }
 
+    // Serverless Mobile Game Loop Trigger Execution
+    window.startMobileGameEngine = async function() {
+        if(isEngineRunning) return alert("Engine is already running in background!");
+        isEngineRunning = true;
+        document.getElementById('loopTriggerBtn').innerText = "⚡ ENGINE STANDBY ACTIVE (DO NOT CLOSE)";
+        document.getElementById('loopTriggerBtn').style.background = "#10b981";
+
+        const suits = ['♠', '♥', '♦', '♣'];
+        const ranks = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
+
+        while(true) {
+            // 1. Start Betting Phase (25 Seconds Counter)
+            await update(ref(database, "game"), { status: "betting", time: 25, joker: null, andarCards: null, baharCards: null, winner: null });
+            for(let i=25; i>=0; i--) {
+                await set(ref(database, "game/time"), i);
+                await new Promise(r => setTimeout(r, 1000));
+            }
+
+            // 2. Lock & Deal Phase
+            await update(ref(database, "game"), { status: "dealing", time: 0 });
+            await new Promise(r => setTimeout(r, 1200));
+
+            // Create and Shuffle deck array
+            let deck = [];
+            suits.forEach(s => ranks.forEach(r => deck.push({rank: r, suit: s})));
+            deck.sort(() => Math.random() - 0.5);
+
+            let joker = deck.pop();
+            await set(ref(database, "game/joker"), joker);
+            await new Promise(r => setTimeout(r, 1000));
+
+            let andarCards = [], baharCards = [], winner = null, turn = "andar";
+            let forceSnap = await get(ref(database, "game/forcedWinner"));
+            let forcedWinner = forceSnap.exists() ? forceSnap.val() : "auto";
+
+            // If forced win condition doesn't naturally occur early, generate perfect deck
+            if(forcedWinner === "andar" || forcedWinner === "bahar") {
+                deck = deck.filter(c => c.rank !== joker.rank);
+                let targetPos = Math.floor(Math.random() * 6) + 2; 
+                let exactMatchCard = { rank: joker.rank, suit: suits[Math.floor(Math.random()*4)] };
+                let insertionIndex = (targetPos * 2) - (forcedWinner === "andar" ? 2 : 1);
+                deck.splice(deck.length - insertionIndex, 0, exactMatchCard);
+            }
+
+            // Dealing simulation stack loop
+            while(!winner && deck.length > 0) {
+                let card = deck.pop();
+                if(turn === "andar") {
+                    andarCards.push(card);
+                    await set(ref(database, "game/andarCards"), andarCards);
+                    if(card.rank === joker.rank) winner = "andar";
+                    turn = "bahar";
+                } else {
+                    baharCards.push(card);
+                    await set(ref(database, "game/baharCards"), baharCards);
+                    if(card.rank === joker.rank) winner = "bahar";
+                    turn = "andar";
+                }
+                await new Promise(r => setTimeout(r, 900)); // Smooth Suspense dealing interval
+            }
+
+            // 3. Declare End Match and Settle Ledger balances
+            await update(ref(database, "game"), { status: "ended", winner: winner });
+            
+            // Payout Settlement Logic
+            let playersSnap = await get(ref(database, "players"));
+            if(playersSnap.exists()) {
+                let pData = playersSnap.val();
+                let updates = {};
+                Object.entries(pData).forEach(([uid, p]) => {
+                    if(p.currentBet) {
+                        let amt = parseInt(p.currentBet.amount) || 0;
+                        if(p.currentBet.side === winner) {
+                            updates[`players/${uid}/coins`] = (parseInt(p.coins) || 0) + (amt * 2);
+                        }
+                        updates[`players/${uid}/currentBet`] = null;
+                    }
+                });
+                if(Object.keys(updates).length > 0) await update(ref(database), updates);
+            }
+
+            // Push Match History Record (Limit size to last 8 rounds)
+            let histRef = ref(database, "game/historyList");
+            let histSnap = await get(histRef);
+            if(histSnap.exists() && Object.keys(histSnap.val()).length >= 8) {
+                let keys = Object.keys(histSnap.val());
+                await remove(ref(database, `game/historyList/${keys[0]}`));
+            }
+            await push(histRef, winner);
+
+            // Reset Force State back to Auto
+            await set(ref(database, "game/forcedWinner"), "auto");
+            await new Promise(r => setTimeout(r, 8000)); // Break interval between games
+        }
+    }
+
+    // Ledger auditor routines
     onValue(ref(database, 'requests/deposits'), (snapshot) => {
         const body = document.getElementById('depositBody'); body.innerHTML = "";
         if(snapshot.exists()) {
@@ -147,7 +253,7 @@
                 let row = document.createElement('tr');
                 row.innerHTML = `<td><strong>${req.userId}</strong></td><td><b style="color:#00f5d4;">${req.amount}</b></td><td><code>${req.utr}</code></td><td></td>`;
                 let bA = document.createElement('button'); bA.className = 'btn-approve'; bA.innerText = '✓ Approve';
-                bA.onclick = () => { update(ref(database, `players/${req.userId}`), { coins: increment(parseInt(req.amount)) }); remove(ref(database, `requests/deposits/${key}`)); };
+                bA.onclick = () => { update(ref(database, `players/${req.userId}`), { coins: increment(parseInt(req.amount)) }).then(() => remove(ref(database, `requests/deposits/${key}`))); };
                 let bR = document.createElement('button'); bR.className = 'btn-reject'; bR.innerText = '✗ Reject';
                 bR.onclick = () => remove(ref(database, `requests/deposits/${key}`));
                 row.cells[3].appendChild(bA); row.cells[3].appendChild(bR); body.appendChild(row);
@@ -161,10 +267,10 @@
             Object.entries(snapshot.val()).forEach(([key, req]) => {
                 let row = document.createElement('tr');
                 row.innerHTML = `<td><strong>${req.userId}</strong></td><td><b style="color:#ff5c5c;">${req.amount}</b></td><td><code>${req.upiId}</code></td><td></td>`;
-                let bA = document.createElement('button'); bA.className = 'btn-approve'; bA.innerText = '✓ Paid & Clear';
+                let bA = document.createElement('button'); bA.className = 'btn-approve'; bA.innerText = '✓ Paid';
                 bA.onclick = () => remove(ref(database, `requests/withdraws/${key}`));
                 let bR = document.createElement('button'); bR.className = 'btn-reject'; bR.innerText = '✗ Refund';
-                bR.onclick = () => { update(ref(database, `players/${req.userId}`), { coins: increment(parseInt(req.amount)) }); remove(ref(database, `requests/withdraws/${key}`)); };
+                bR.onclick = () => { update(ref(database, `players/${req.userId}`), { coins: increment(parseInt(req.amount)) }).then(() => remove(ref(database, `requests/withdraws/${key}`))); };
                 row.cells[3].appendChild(bA); row.cells[3].appendChild(bR); body.appendChild(row);
             });
         } else { body.innerHTML = "<tr><td colspan='4'>No Pending Requests</td></tr>"; }
@@ -173,7 +279,9 @@
     window.searchPlayer = function() {
         const id = document.getElementById('searchPlayerId').value.trim();
         if(!id) return alert("Enter Player ID!");
-        get(ref(database, 'players/' + id)).then(snap => {
+        if(typeof searchListenerUnsubscribe === "function") searchListenerUnsubscribe();
+
+        searchListenerUnsubscribe = onValue(ref(database, 'players/' + id), (snap) => {
             if(snap.exists()) {
                 activeSearchedId = id; const d = snap.val();
                 document.getElementById('resId').innerText = id;
@@ -181,20 +289,20 @@
                 document.getElementById('resBetSide').innerText = d.currentBet ? d.currentBet.side.toUpperCase() : "No Active Bet";
                 document.getElementById('resBetAmt').innerText = d.currentBet ? d.currentBet.amount + " Coins" : "0 Coins";
                 document.getElementById('searchResultBox').style.display = "block";
-            } else { alert("Not Found!"); }
+            } else { alert("Not Found!"); document.getElementById('searchResultBox').style.display = "none"; }
         });
     }
 
     window.modifyCoins = function(type) {
         let val = parseInt(document.getElementById('modCoinAmt').value);
-        if(!activeSearchedId || isNaN(val) || val <= 0) return alert("Error loading profile details!");
+        if(!activeSearchedId || isNaN(val) || val <= 0) return alert("Invalid amount.");
         if(type === 'minus') val = -val;
-        update(ref(database, 'players/' + activeSearchedId), { coins: increment(val) }).then(() => { searchPlayer(); });
+        update(ref(database, 'players/' + activeSearchedId), { coins: increment(val) }).then(() => { document.getElementById('modCoinAmt').value = ""; });
     }
 
     window.changeUpiId = function() {
         let upi = document.getElementById("newUpiInput").value.trim();
-        if(upi.length > 3) { set(ref(database, "system/config"), { upi: upi }); document.getElementById("newUpiInput").value = ""; }
+        if(upi.length > 3) { set(ref(database, "system/config"), { upi: upi }); document.getElementById("newUpiInput").value = ""; alert("UPI Updated!"); }
     }
 </script>
 </body>

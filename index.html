@@ -12,7 +12,7 @@
         .coins-text { color: #00f5d4; font-weight: bold; }
         .time-text { color: #ff5c5c; font-weight: bold; font-size: 18px; }
         .joker-area { margin: 15px 0; min-height: 170px; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 12px; }
-        .card { display: inline-block; width: 85px; height: 125px; background: #ffffff; color: #000000; border-radius: 10px; padding: 8px; box-sizing: border-box; position: relative; font-weight: bold; font-size: 20px; box-shadow: 0 6px 12px rgba(0,0,0,0.4); margin: 5px; }
+        .card { display: inline-block; width: 85px; height: 125px; background: #ffffff; color: #000000; border-radius: 10px; padding: 8px; box-sizing: border-box; position: relative; font-weight: bold; font-size: 20px; box-shadow: 0 6px 12px rgba(0,0,0,0.4); margin: 5px; vertical-align: top; }
         .card.red { color: #e63946; }
         .card.black { color: #1d3557; }
         .card .suit-center { font-size: 34px; position: absolute; top: 55%; left: 50%; transform: translate(-50%, -50%); }
@@ -20,15 +20,17 @@
         .side-box { width: 48%; background: #0b132b; padding: 10px; border-radius: 12px; min-height: 180px; border: 1px solid #3a506b; box-sizing: border-box; transition: all 0.4s ease-in-out; }
         .side-box.winner-glow { border-color: #10b981 !important; background: #064e3b !important; box-shadow: 0 0 20px #10b981; }
         .card-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 5px; margin-top: 10px; }
-        .btn-bet { background: #1e293b; color: white; border: 2px solid #3a506b; padding: 12px; font-size: 15px; font-weight: bold; border-radius: 10px; cursor: pointer; margin: 5px; width: 44%; }
+        .btn-bet { background: #1e293b; color: white; border: 2px solid #3a506b; padding: 12px; font-size: 15px; font-weight: bold; border-radius: 10px; cursor: pointer; margin: 5px; width: 44%; transition: background 0.2s; }
         .btn-bet.activeBtn { background: #00b4d8; border-color: #00f5d4; box-shadow: 0 0 15px #00b4d8; }
         .input-amt { width: 60%; padding: 10px; font-size: 16px; border-radius: 8px; border: 2px solid #3a506b; background: #0b132b; color: white; text-align: center; margin-top: 10px; }
         .btn-submit { width: 92%; background: #ffb703; color: #023047; border: none; padding: 12px; font-weight: bold; font-size: 16px; border-radius: 10px; cursor: pointer; margin-top: 12px; }
-        .history-box { background: #0b132b; padding: 8px; border-radius: 8px; margin-top: 5px; display: flex; justify-content: center; align-items: center; gap: 6px; min-height: 35px; }
+        .history-box { background: #0b132b; padding: 8px; border-radius: 8px; margin-top: 5px; display: flex; justify-content: center; align-items: center; gap: 6px; min-height: 35px; flex-wrap: wrap; }
         .history-item { padding: 3px 8px; border-radius: 5px; font-weight: bold; font-size: 13px; color: white; }
         .blue-badge { background: #2563eb; }
         .gold-badge { background: #d97706; }
         .upi-box { background: #111c3a; padding: 12px; border-radius: 12px; margin-top: 20px; border: 1px dashed #3a506b; text-align: left; }
+        .tab-btn { background: #1e293b; color: #cbd5e1; border: none; padding: 8px 15px; border-radius: 5px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        .tab-btn.active-tab { background: #3b82f6; color: white; }
     </style>
 </head>
 <body>
@@ -48,7 +50,7 @@
         </div>
     </div>
 
-    <div id="confirmMsg" style="color: #00f5d4; font-weight: bold; margin-bottom: 8px; min-height: 22px; font-size:14px; background: rgba(0,245,212,0.1); border-radius: 5px;"></div>
+    <div id="confirmMsg" style="color: #00f5d4; font-weight: bold; margin-bottom: 8px; min-height: 22px; font-size:14px; background: rgba(0,245,212,0.1); border-radius: 5px; display: flex; justify-content: center; align-items: center;"></div>
 
     <div class="joker-area">
         <h4 style="margin:0 0 5px 0; color:#cbd5e1; font-size:13px; letter-spacing:1px;">JOKER CARD</h4>
@@ -71,15 +73,15 @@
         <button id="andarBtn" class="btn-bet activeBtn" onclick="selectSide('andar')">ANDAR</button>
         <button id="baharBtn" class="btn-bet" onclick="selectSide('bahar')">BAHAR</button>
         <br>
-        <input type="number" id="amount" class="input-amt" value="20">
+        <input type="number" id="amount" class="input-amt" value="20" min="1" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
         <br>
         <button class="btn-submit" id="mainSubmitBtn" onclick="placeBet()">PLACE BET</button>
     </div>
 
     <div class="upi-box">
         <div style="display: flex; justify-content: space-around; margin-bottom: 12px; border-bottom: 1px solid #3a506b; padding-bottom: 8px;">
-            <button onclick="toggleFinanceTab('deposit')" id="depTabBtn" style="background: #3b82f6; color: white; border: none; padding: 6px 15px; border-radius: 5px; font-weight: bold; cursor: pointer;">📥 Deposit</button>
-            <button onclick="toggleFinanceTab('withdraw')" id="witTabBtn" style="background: #1e293b; color: #cbd5e1; border: none; padding: 6px 15px; border-radius: 5px; font-weight: bold; cursor: pointer;">📤 Withdraw</button>
+            <button onclick="toggleFinanceTab('deposit')" id="depTabBtn" class="tab-btn active-tab">📥 Deposit</button>
+            <button onclick="toggleFinanceTab('withdraw')" id="witTabBtn" class="tab-btn">📤 Withdraw</button>
         </div>
 
         <div id="depositTabSection">
@@ -158,6 +160,7 @@
         }
     });
 
+    // Client Side Synchronized Engine System
     onValue(ref(database, 'game'), snapshot => {
         if(!snapshot.exists()) return;
         const gameData = snapshot.val();
@@ -182,7 +185,6 @@
 
         if(gameData.status === "dealing") dom.gameStatus.innerText = "Dealing Cards...";
 
-        // Real-time batch-rendering optimization
         renderCardStack(dom.andarCards, gameData.andarCards);
         renderCardStack(dom.baharCards, gameData.baharCards);
 
@@ -238,6 +240,8 @@
         const isDep = tabName === 'deposit';
         document.getElementById('depositTabSection').style.display = isDep ? 'block' : 'none';
         document.getElementById('withdrawTabSection').style.display = isDep ? 'none' : 'block';
+        document.getElementById('depTabBtn').className = isDep ? 'tab-btn active-tab' : 'tab-btn';
+        document.getElementById('witTabBtn').className = isDep ? 'tab-btn' : 'tab-btn active-tab';
     }
 
     window.sendDeposit = function() {
@@ -252,18 +256,25 @@
     window.sendWithdrawal = function() {
         let amt = parseInt(document.getElementById('witAmt').value); 
         let upi = document.getElementById('witUpi').value.trim();
-        if(isNaN(amt) || amt < 100 || amt > myCoins) return alert("Invalid amount!");
+        if(isNaN(amt) || amt < 100) return alert("Minimum withdrawal 100 coins hai!");
+        if(amt > myCoins) return alert("Insufficient Balance!");
+        if(!upi) return alert("UPI ID enter kijiye!");
         
         runTransaction(ref(database, `players/${myId}`), (profile) => {
             if(profile && profile.coins >= amt) {
                 profile.coins -= amt;
-                push(ref(database, 'requests/withdraws'), { userId: myId, amount: amt, upiId: upi, timestamp: Date.now() });
+                return profile;
             }
-            return profile;
-        }).then(() => {
-            alert("Withdrawal request filed!");
-            document.getElementById('witAmt').value = ''; document.getElementById('witUpi').value = '';
-        });
+            return;
+        }).then((result) => {
+            if(result.committed) {
+                push(ref(database, 'requests/withdraws'), { userId: myId, amount: amt, upiId: upi, timestamp: Date.now() });
+                alert("Withdrawal request successfully filed!");
+                document.getElementById('witAmt').value = ''; document.getElementById('witUpi').value = '';
+            } else {
+                alert("Transaction failed!");
+            }
+        }).catch(() => alert("Error running transaction."));
     }
 </script>
 </body>
